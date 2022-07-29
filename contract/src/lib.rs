@@ -20,7 +20,5 @@ fn Method_2(params: &SendMsgParams) {
     let val: u32 = params.secret;
     let val_size: u32 = 4;
     let tag = KeyTag::kInternal;
-    unsafe {
-        Env::SaveVar(&key, key_size, &val, val_size, tag);
-    }
+    Env::SaveVar(&key, key_size, &val, val_size, tag);
 }
