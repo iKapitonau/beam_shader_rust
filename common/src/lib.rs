@@ -12,7 +12,7 @@ fn panic_handler(info: &PanicInfo) -> ! {
 
 #[repr(packed(1))]
 pub struct InitialParams {
-    state: u32,
+    pub state: u32,
 }
 
 #[repr(packed(1))]
