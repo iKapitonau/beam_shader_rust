@@ -28,6 +28,17 @@ fn on_action_create_contract(_unused: ContractID) {
 }
 
 fn on_action_destroy_contract(cid: ContractID) {
+    let params = DtorParams {};
+    let funds = FundsChange {
+        m_Amount: 0,
+        m_Aid: 0,
+        m_Consume: 0,
+    };
+    let sig = SigRequest {
+        m_pID: 0 as *const u32,
+        m_nID: 0,
+    };
+    Env::GenerateKernel(&cid, DtorParams::kMethod, &params, 0, &funds, 0, &sig, 0, "Destroy contract\0".as_ptr(), 0);
 }
 
 fn on_action_view_contracts(_unused: ContractID) {
