@@ -1,12 +1,8 @@
 #![no_std]
 #![no_main]
-#[allow(non_snake_case, non_camel_case_types, non_upper_case_globals, non_upper_case_globals)]
 
-use common::root::Env;
-use common::root::ContractID;
-use common::root::FundsChange;
-use common::root::SigRequest;
-use common::root::KeyTag;
+use common::root::env;
+use common::root::*;
 use common::*;
 
 use core::mem::size_of_val;
@@ -19,77 +15,81 @@ fn on_action_create_contract(_unused: ContractID) {
         state: 333,
     };
     let funds = FundsChange {
-        m_Amount: 0,
-        m_Aid: 0,
-        m_Consume: 0,
+        amount: 0,
+        aid: 0,
+        consume: 0,
     };
     let sig = SigRequest {
-        m_pID: 0 as *const usize,
-        m_nID: 0,
+        id_ptr: 0 as *const usize,
+        id_size: 0,
     };
-    Env::GenerateKernel(&Default::default(), InitialParams::kMethod, &params, size_of_val(&params) as u32, &funds, 0, &sig, 0, "Create contract\0".as_ptr(), 0);
+    env::generate_kernel(&Default::default(), InitialParams::METHOD, &params, size_of_val(&params) as u32, &funds, 0, &sig, 0, "Create contract\0".as_ptr(), 0);
 }
 
 fn on_action_destroy_contract(cid: ContractID) {
     let params = DtorParams {};
     let funds = FundsChange {
-        m_Amount: 0,
-        m_Aid: 0,
-        m_Consume: 0,
+        amount: 0,
+        aid: 0,
+        consume: 0,
     };
     let sig = SigRequest {
-        m_pID: 0 as *const usize,
-        m_nID: 0,
+        id_ptr: 0 as *const usize,
+        id_size: 0,
     };
-    Env::GenerateKernel(&cid, DtorParams::kMethod, &params, size_of_val(&params) as u32, &funds, 0, &sig, 0, "Destroy contract\0".as_ptr(), 0);
+    env::generate_kernel(&cid, DtorParams::METHOD, &params, size_of_val(&params) as u32, &funds, 0, &sig, 0, "Destroy contract\0".as_ptr(), 0);
 }
 
 fn on_action_view_contracts(_unused: ContractID) {
 }
 
-fn on_action_view_contract_params(cid: ContractID) {
+fn on_action_view_contract_params(_cid: ContractID) {
 }
 
 fn on_action_send_msg(cid: ContractID) {
-    let mut params = SendMsgParams {
-        key: 0,
-        secret: 0,
-    };
     let funds = FundsChange {
-        m_Amount: 0,
-        m_Aid: 0,
-        m_Consume: 0,
+        amount: 0,
+        aid: 0,
+        consume: 0,
     };
     let sig = SigRequest {
-        m_pID: 0 as *const usize,
-        m_nID: 0,
+        id_ptr: 0 as *const usize,
+        id_size: 0,
     };
-    Env::DocGetNum32("key\0", &mut params.key);
-    Env::DocGetNum32("secret\0", &mut params.secret);
-    Env::GenerateKernel(&cid, SendMsgParams::kMethod, &params, size_of_val(&params) as u32, &funds, 0, &sig, 0, "Send secret\0".as_ptr(), 0);
+    let mut key: u32 = Default::default();
+    env::doc_get_num32("key\0", &mut key);
+    let mut secret: u32 = Default::default();
+    env::doc_get_num32("secret\0", &mut secret);
+    let params = SendMsgParams {
+        key,
+        secret,
+    };
+    env::generate_kernel(&cid, SendMsgParams::METHOD, &params, size_of_val(&params) as u32, &funds, 0, &sig, 0, "Send secret\0".as_ptr(), 0);
 }
 
 fn on_action_get_my_msg(cid: ContractID) {
     let mut key_u32: u32 = Default::default();
-    Env::DocGetNum32("key\0", &mut key_u32);
+    env::doc_get_num32("key\0", &mut key_u32);
 
-    let key = Env::Key_T::<u32> {
-        prefix: Env::KeyPrefix {
+    let key = env::Key::<u32> {
+        prefix: env::KeyPrefix {
             cid,
-            tag: KeyTag::kInternal,
+            tag: KeyTag::INTERNAL,
         },
         key_in_contract: key_u32,
     };
     let mut secret: u32 = Default::default();
-    Env::VarReader::Read_T(&key, &mut secret);
-    Env::DocAddNum32("Your secret:\0", secret);
+    env::VarReader::read(&key, &mut secret);
+    env::doc_add_num32("Your secret:\0", secret);
 }
 
 #[no_mangle]
+#[allow(non_snake_case)]
 fn Method_0() {
 }
 
 #[no_mangle]
+#[allow(non_snake_case)]
 fn Method_1() {
     const INVALID_ROLE_ACTIONS: [(&str, ActionFunc); 0] = [];
 
@@ -111,32 +111,32 @@ fn Method_1() {
     ];
 
     let mut role: [u8; 32] = Default::default();
-    Env::DocGetText("role\0", &mut role, 32);
+    env::doc_get_text("role\0", &mut role, 32);
 
     let mut action_map: ActionsMap = &INVALID_ROLE_ACTIONS;
     for i in 0..VALID_ROLES.len() {
-        if Env::Memcmp(&role, VALID_ROLES[i].0.as_ptr(), VALID_ROLES[i].0.len() as u32) == 0 {
+        if env::memcmp(&role, VALID_ROLES[i].0.as_ptr(), VALID_ROLES[i].0.len() as u32) == 0 {
             action_map = VALID_ROLES[i].1;
             break;
         }
     }
 
     if action_map == &INVALID_ROLE_ACTIONS {
-        Env::DocAddText("error\0", "Invalid role\0".as_ptr());
+        env::doc_add_text("error\0", "Invalid role\0".as_ptr());
         return;
     }
 
     let mut action: [u8; 32] = Default::default();
-    Env::DocGetText("action\0", &mut action, 32);
+    env::doc_get_text("action\0", &mut action, 32);
 
     for i in 0..action_map.len() {
-        if Env::Memcmp(&action, action_map[i].0.as_ptr(), action_map[i].0.len() as u32) == 0 {
+        if env::memcmp(&action, action_map[i].0.as_ptr(), action_map[i].0.len() as u32) == 0 {
             let mut cid: ContractID = [0; 32];
-            Env::DocGetBlob("cid\0", &mut cid, 32);
+            env::doc_get_blob("cid\0", &mut cid, 32);
             action_map[i].1(cid);
             return;
         }
     }
 
-    Env::DocAddText("error\0", "Invalid action\0".as_ptr());
+    env::doc_add_text("error\0", "Invalid action\0".as_ptr());
 }

@@ -26,13 +26,13 @@ pub struct SendMsgParams {
 }
 
 impl InitialParams {
-    pub const kMethod: u32 = 0;
+    pub const METHOD: u32 = 0;
 }
 
 impl DtorParams {
-    pub const kMethod: u32 = 1;
+    pub const METHOD: u32 = 1;
 }
 
 impl SendMsgParams {
-    pub const kMethod: u32 = 2;
+    pub const METHOD: u32 = 2;
 }

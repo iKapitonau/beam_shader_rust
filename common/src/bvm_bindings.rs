@@ -1,4 +1,3 @@
-#[allow(non_snake_case, non_camel_case_types, non_upper_case_globals)]
 pub mod root {
     pub type Height = u64;
     pub type Amount = u64;
@@ -7,47 +6,45 @@ pub mod root {
     pub type ContractID = [u8; 32usize];
     pub type ShaderID = [u8; 32usize];
     pub type HashValue = [u8; 32usize];
-    pub type Secp_scalar_data = [u8; 32usize];
+    pub type SecpScalarData = [u8; 32usize];
 
     #[repr(C)]
-    pub struct Secp_point_data {
-        pub X: [u8; 32usize],
-        pub Y: u8,
+    pub struct SecpPointData {
+        pub x: [u8; 32usize],
+        pub y: u8,
     }
 
-    pub type PubKey = Secp_point_data;
+    pub type PubKey = SecpPointData;
 
     #[repr(C)]
     pub struct FundsChange {
-        pub m_Amount: Amount,
-        pub m_Aid: AssetID,
-        pub m_Consume: u8,
+        pub amount: Amount,
+        pub aid: AssetID,
+        pub consume: u8,
     }
 
     #[repr(C, packed)]
     pub struct SigRequest {
-        pub m_pID: *const usize,
-        pub m_nID: u32,
+        pub id_ptr: *const usize,
+        pub id_size: u32,
     }
 
     pub struct KeyTag {
     }
 
     impl KeyTag {
-        pub const kInternal: u8 = 0;
-        pub const kInternalStealth: u8 = 8;
-        pub const kLockedAmount: u8 = 1;
-        pub const kRefs: u8 = 2;
-        pub const kOwnedAsset: u8 = 3;
-        pub const kShaderChange: u8 = 4;
-        pub const kSidCid: u8 = 16;
-        pub const kMaxSize: u32 = 256;
+        pub const INTERNAL: u8 = 0;
+        pub const INTERNAL_STEALTH: u8 = 8;
+        pub const LOCKED_AMOUNT: u8 = 1;
+        pub const REFS: u8 = 2;
+        pub const OWNED_ASSET: u8 = 3;
+        pub const SHADER_CHANGE: u8 = 4;
+        pub const SID_CID: u8 = 16;
+        pub const MAX_SIZE: u32 = 256;
     }
 
-    pub mod Env {
-        #[allow(unused_imports)]
-        use self::super::super::root;
-        use crate::root::ContractID;
+    pub mod env {
+        use crate::root::*;
         use core::mem::size_of_val;
 
         #[repr(packed(1))]
@@ -57,52 +54,52 @@ pub mod root {
         }
 
         #[repr(packed(1))]
-        pub struct Key_T<T> {
+        pub struct Key<T> {
             pub prefix: KeyPrefix,
             pub key_in_contract: T,
         }
 
-        pub struct VarReaderEx<const flexible: bool> {
+        pub struct VarReaderEx<const FLEXIBLE: bool> {
             handle: u32,
         }
 
-        impl<const flexible: bool> VarReaderEx<flexible> {
-            fn EnumInternal(&mut self, key1: *const usize, key1_size: u32, key2: *const usize, key2_size: u32) {
-                self.handle = Vars_Enum(key1, key1_size, key2, key2_size); 
+        impl<const FLEXIBLE: bool> VarReaderEx<FLEXIBLE> {
+            fn enum_internal(&mut self, key1: *const usize, key1_size: u32, key2: *const usize, key2_size: u32) {
+                self.handle = vars_enum(key1, key1_size, key2, key2_size); 
             }
 
-            fn CloseInternal(&self) {
-                if flexible {
+            fn close_internal(&self) {
+                if FLEXIBLE {
                     if self.handle != 0 {
                         return;
                     }
                 }
-                Vars_Close(self.handle);
+                vars_close(self.handle);
             }
 
-            pub fn MoveNext(&self, key: *mut usize, key_size: &mut u32, val: *mut usize, val_size: &mut u32, repeat: u8) -> bool {
-                Vars_MoveNext(self.handle, key, key_size, val, val_size, 0) != 0
+            pub fn move_next(&self, key: *mut usize, key_size: &mut u32, val: *mut usize, val_size: &mut u32, repeat: u8) -> bool {
+                vars_move_next(self.handle, key, key_size, val, val_size, repeat) != 0
             }
 
-            pub fn Read_T<K, V>(key: &K, value: &mut V) -> bool {
+            pub fn read<K, V>(key: &K, value: &mut V) -> bool {
                 let mut r = VarReaderEx::<false> {
                     handle: Default::default(),
                 };
 
                 let mut key_size: u32 = size_of_val(key) as u32;
-                r.EnumInternal(key as *const K as *const usize, key_size, key as *const K as *const usize, key_size);
+                r.enum_internal(key as *const K as *const usize, key_size, key as *const K as *const usize, key_size);
 
                 let mut val_size: u32 = size_of_val(value) as u32;
                 key_size = 0;
-                let ret = r.MoveNext(0 as *mut usize, &mut key_size, value as *mut V as *mut usize, &mut val_size, 0) && size_of_val(value) as u32 == val_size;
-                r.CloseInternal();
+                let ret = r.move_next(0 as *mut usize, &mut key_size, value as *mut V as *mut usize, &mut val_size, 0) && size_of_val(value) as u32 == val_size;
+                r.close_internal();
                 ret
             }
         }
 
         pub type VarReader = VarReaderEx<false>;
 
-        pub fn SaveVar<K, V>(
+        pub fn save_var<K, V>(
                 key: *const K,
                 key_size: u32,
                 val: *const V,
@@ -112,94 +109,94 @@ pub mod root {
             unsafe { return _SaveVar(key as *const usize, key_size, val as *const usize, val_size, tag); }
         }
 
-        pub fn DocAddText<V>(id: &str, val: *const V) {
+        pub fn doc_add_text<V>(id: &str, val: *const V) {
             unsafe { return _DocAddText(id.as_ptr() as *const usize, val as *const usize); }
         }
 
-        pub fn DocGetText<V>(id: &str, val: *mut V, val_size: u32) -> u32 {
+        pub fn doc_get_text<V>(id: &str, val: *mut V, val_size: u32) -> u32 {
             unsafe { return _DocGetText(id.as_ptr() as *const usize, val as *mut usize, val_size); }
         }
 
-        pub fn DocAddNum32(id: &str, val: u32) {
+        pub fn doc_add_num32(id: &str, val: u32) {
             unsafe { return _DocAddNum32(id.as_ptr() as *const usize, val); }
         }
 
-        pub fn DocGetNum32(id: &str, out: *mut u32) -> u8 {
+        pub fn doc_get_num32(id: &str, out: *mut u32) -> u8 {
             unsafe { return _DocGetNum32(id.as_ptr() as *const usize, out); }
         }
 
-        pub fn DocAddNum64(id: &str, val: u64) {
+        pub fn doc_add_num64(id: &str, val: u64) {
             unsafe { return _DocAddNum64(id.as_ptr() as *const usize, val); }
         }
 
-        pub fn DocAddBlob<V>(id: &str, val: *const V, val_size: u32) {
+        pub fn doc_add_blob<V>(id: &str, val: *const V, val_size: u32) {
             unsafe { return _DocAddBlob(id.as_ptr() as *const usize, val as *const usize, val_size); }
         }
 
-        pub fn DocGetBlob<V>(id: &str, val: *mut V, val_size: u32) -> u32 {
+        pub fn doc_get_blob<V>(id: &str, val: *mut V, val_size: u32) -> u32 {
             unsafe { return _DocGetBlob(id.as_ptr() as *const usize, val as *mut usize, val_size); }
         }
 
-        pub fn DocAddGroup(id: &str) {
+        pub fn doc_add_group(id: &str) {
             unsafe { return _DocAddGroup(id.as_ptr() as *const usize); }
         }
 
-        pub fn DocCloseGroup() {
+        pub fn doc_close_group() {
             unsafe { return _DocCloseGroup(); }
         }
 
-        pub fn DocAddArray(id: &str) {
+        pub fn doc_add_array(id: &str) {
             unsafe { return _DocAddArray(id.as_ptr() as *const usize); }
         }
 
-        pub fn DocCloseArray() {
+        pub fn doc_close_array() {
             unsafe { return _DocCloseArray(); }
         }
 
-        pub fn Memset<V>(dst: *mut V, val: u8, size: u32) -> *mut usize {
+        pub fn memset<V>(dst: *mut V, val: u8, size: u32) -> *mut usize {
             unsafe { return _Memset(dst as *mut usize, val, size); }
         }
 
-        pub fn Memcpy<S, D>(dst: *mut D, src: *mut S, size: u32) -> *mut usize {
+        pub fn memcpy<S, D>(dst: *mut D, src: *mut S, size: u32) -> *mut usize {
             unsafe { return _Memcpy(dst as *mut usize, src as *mut usize, size); }
         }
 
-        pub fn Memcmp<S, D>(p1: *const S, p2: *const D, size: u32) -> i32 {
+        pub fn memcmp<S, D>(p1: *const S, p2: *const D, size: u32) -> i32 {
             unsafe { return _Memcmp(p1 as *const usize, p2 as *const usize, size); }
         }
 
-        pub fn Strlen<V>(p: *const V) -> u32 {
+        pub fn strlen<V>(p: *const V) -> u32 {
             unsafe { return _Strlen(p as *const usize); }
         }
 
-        pub fn Heap_Alloc(size: u32) -> *mut usize {
+        pub fn heap_alloc(size: u32) -> *mut usize {
             unsafe { return _Heap_Alloc(size); }
         }
 
-        pub fn Heap_Free<V>(p: *mut V) {
+        pub fn heap_free<V>(p: *mut V) {
             unsafe { return _Heap_Free(p as *mut usize); }
         }
 
-        pub fn Vars_Close(slot: u32) {
+        pub fn vars_close(slot: u32) {
             unsafe { return _Vars_Close(slot); }
         }
 
-        pub fn Vars_Enum<U, V>(key0: *const U, key0_size: u32, key1: *const V, key1_size: u32) -> u32 {
+        pub fn vars_enum<U, V>(key0: *const U, key0_size: u32, key1: *const V, key1_size: u32) -> u32 {
             unsafe { return _Vars_Enum(key0 as *const usize, key0_size, key1 as *const usize, key1_size); }
         }
 
-        pub fn Vars_MoveNext<K, V>(slot: u32, key: *mut K, key_size: *mut u32, val: *mut V, val_size: *mut u32, repeat: u8) -> u8 {
+        pub fn vars_move_next<K, V>(slot: u32, key: *mut K, key_size: *mut u32, val: *mut V, val_size: *mut u32, repeat: u8) -> u8 {
             unsafe { return _Vars_MoveNext(slot, key as *mut usize, key_size, val as *mut usize, val_size, repeat); }
         }
 
-        pub fn GenerateKernel<U, V>(
-            cid: *const root::ContractID,
+        pub fn generate_kernel<U, V>(
+            cid: *const ContractID,
             method: u32,
             arg: *const U,
             arg_size: u32,
-            funds: *const root::FundsChange,
+            funds: *const FundsChange,
             funds_size: u32,
-            sigs: *const root::SigRequest,
+            sigs: *const SigRequest,
             sigs_size: u32,
             comment: *const V,
             charge: u32) {
@@ -322,13 +319,13 @@ pub mod root {
 
             #[link_name = "GenerateKernel"]
             fn _GenerateKernel(
-                cid: *const root::ContractID,
+                cid: *const ContractID,
                 method: u32,
                 arg: *const usize,
                 arg_size: u32,
-                funds: *const root::FundsChange,
+                funds: *const FundsChange,
                 funds_size: u32,
-                sigs: *const root::SigRequest,
+                sigs: *const SigRequest,
                 sigs_size: u32,
                 comment: *const usize,
                 charge: u32
