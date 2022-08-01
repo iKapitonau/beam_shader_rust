@@ -22,7 +22,7 @@ fn on_action_create_contract(_unused: ContractID) {
         m_Consume: 0,
     };
     let sig = SigRequest {
-        m_pID: 0 as *const u32,
+        m_pID: 0 as *const usize,
         m_nID: 0,
     };
     Env::GenerateKernel(&Default::default(), InitialParams::kMethod, &params, 4, &funds, 0, &sig, 0, "Create contract\0".as_ptr(), 0);
@@ -36,7 +36,7 @@ fn on_action_destroy_contract(cid: ContractID) {
         m_Consume: 0,
     };
     let sig = SigRequest {
-        m_pID: 0 as *const u32,
+        m_pID: 0 as *const usize,
         m_nID: 0,
     };
     Env::GenerateKernel(&cid, DtorParams::kMethod, &params, 0, &funds, 0, &sig, 0, "Destroy contract\0".as_ptr(), 0);
@@ -59,7 +59,7 @@ fn on_action_send_msg(cid: ContractID) {
         m_Consume: 0,
     };
     let sig = SigRequest {
-        m_pID: 0 as *const u32,
+        m_pID: 0 as *const usize,
         m_nID: 0,
     };
     Env::DocGetNum32("key\0", &mut params.key);
