@@ -48,6 +48,7 @@ pub mod root {
         #[allow(unused_imports)]
         use self::super::super::root;
         use crate::root::ContractID;
+        use core::mem::size_of_val;
 
         #[repr(packed(1))]
         pub struct KeyPrefix {
@@ -83,15 +84,17 @@ pub mod root {
                 Vars_MoveNext(self.handle, key, key_size, val, val_size, 0) != 0
             }
 
-            pub fn Read<K, V>(key: *const K, key_size: u32, value: *mut V, val_size: u32) -> bool {
+            pub fn Read_T<K, V>(key: &K, value: &mut V) -> bool {
                 let mut r = VarReaderEx::<false> {
                     handle: Default::default(),
                 };
-                r.EnumInternal(key as *const usize, key_size, key as *const usize, key_size);
 
-                let mut key_size: u32 = 0;
-                let mut val_size: u32 = val_size;
-                let ret = r.MoveNext(0 as *mut usize, &mut key_size, value as *mut usize, &mut val_size, 0);
+                let mut key_size: u32 = size_of_val(key) as u32;
+                r.EnumInternal(key as *const K as *const usize, key_size, key as *const K as *const usize, key_size);
+
+                let mut val_size: u32 = size_of_val(value) as u32;
+                key_size = 0;
+                let ret = r.MoveNext(0 as *mut usize, &mut key_size, value as *mut V as *mut usize, &mut val_size, 0) && size_of_val(value) as u32 == val_size;
                 r.CloseInternal();
                 ret
             }

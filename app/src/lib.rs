@@ -9,6 +9,8 @@ use common::root::SigRequest;
 use common::root::KeyTag;
 use common::*;
 
+use core::mem::size_of_val;
+
 type ActionFunc = fn(cid: ContractID);
 type ActionsMap<'a> = &'a [(&'a str, ActionFunc)];
 
@@ -25,7 +27,7 @@ fn on_action_create_contract(_unused: ContractID) {
         m_pID: 0 as *const usize,
         m_nID: 0,
     };
-    Env::GenerateKernel(&Default::default(), InitialParams::kMethod, &params, 4, &funds, 0, &sig, 0, "Create contract\0".as_ptr(), 0);
+    Env::GenerateKernel(&Default::default(), InitialParams::kMethod, &params, size_of_val(&params) as u32, &funds, 0, &sig, 0, "Create contract\0".as_ptr(), 0);
 }
 
 fn on_action_destroy_contract(cid: ContractID) {
@@ -39,7 +41,7 @@ fn on_action_destroy_contract(cid: ContractID) {
         m_pID: 0 as *const usize,
         m_nID: 0,
     };
-    Env::GenerateKernel(&cid, DtorParams::kMethod, &params, 0, &funds, 0, &sig, 0, "Destroy contract\0".as_ptr(), 0);
+    Env::GenerateKernel(&cid, DtorParams::kMethod, &params, size_of_val(&params) as u32, &funds, 0, &sig, 0, "Destroy contract\0".as_ptr(), 0);
 }
 
 fn on_action_view_contracts(_unused: ContractID) {
@@ -64,7 +66,7 @@ fn on_action_send_msg(cid: ContractID) {
     };
     Env::DocGetNum32("key\0", &mut params.key);
     Env::DocGetNum32("secret\0", &mut params.secret);
-    Env::GenerateKernel(&cid, SendMsgParams::kMethod, &params, 8, &funds, 0, &sig, 0, "Send secret\0".as_ptr(), 0);
+    Env::GenerateKernel(&cid, SendMsgParams::kMethod, &params, size_of_val(&params) as u32, &funds, 0, &sig, 0, "Send secret\0".as_ptr(), 0);
 }
 
 fn on_action_get_my_msg(cid: ContractID) {
@@ -79,7 +81,7 @@ fn on_action_get_my_msg(cid: ContractID) {
         key_in_contract: key_u32,
     };
     let mut secret: u32 = Default::default();
-    Env::VarReader::Read(&key, 37, &mut secret, 4);
+    Env::VarReader::Read_T(&key, &mut secret);
     Env::DocAddNum32("Your secret:\0", secret);
 }
 

@@ -5,6 +5,8 @@ use common::root::Env;
 use common::root::KeyTag;
 use common::*;
 
+use core::mem::size_of_val;
+
 #[no_mangle]
 fn Ctor(params: &InitialParams) {
 }
@@ -15,10 +17,5 @@ fn Dtor(params: &DtorParams) {
 
 #[no_mangle]
 fn Method_2(params: &SendMsgParams) {
-    let key: u32 = params.key;
-    let key_size: u32 = 4;
-    let val: u32 = params.secret;
-    let val_size: u32 = 4;
-    let tag = KeyTag::kInternal;
-    Env::SaveVar(&key, key_size, &val, val_size, tag);
+    Env::SaveVar(&params.key, size_of_val(&params.key) as u32, &params.secret, size_of_val(&params.secret) as u32, KeyTag::kInternal);
 }
