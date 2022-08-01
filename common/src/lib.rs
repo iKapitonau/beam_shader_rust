@@ -16,8 +16,7 @@ pub struct InitialParams {
 }
 
 #[repr(packed(1))]
-pub struct DtorParams {
-}
+pub struct DtorParams {}
 
 #[repr(packed(1))]
 pub struct SendMsgParams {

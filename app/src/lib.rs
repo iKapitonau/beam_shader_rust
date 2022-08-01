@@ -11,9 +11,7 @@ type ActionFunc = fn(cid: ContractID);
 type ActionsMap<'a> = &'a [(&'a str, ActionFunc)];
 
 fn on_action_create_contract(_unused: ContractID) {
-    let params = InitialParams {
-        state: 333,
-    };
+    let params = InitialParams { state: 333 };
     let funds = FundsChange {
         amount: 0,
         aid: 0,
@@ -23,7 +21,18 @@ fn on_action_create_contract(_unused: ContractID) {
         id_ptr: 0 as *const usize,
         id_size: 0,
     };
-    env::generate_kernel(&Default::default(), InitialParams::METHOD, &params, size_of_val(&params) as u32, &funds, 0, &sig, 0, "Create contract\0".as_ptr(), 0);
+    env::generate_kernel(
+        &Default::default(),
+        InitialParams::METHOD,
+        &params,
+        size_of_val(&params) as u32,
+        &funds,
+        0,
+        &sig,
+        0,
+        "Create contract\0".as_ptr(),
+        0,
+    );
 }
 
 fn on_action_destroy_contract(cid: ContractID) {
@@ -37,14 +46,23 @@ fn on_action_destroy_contract(cid: ContractID) {
         id_ptr: 0 as *const usize,
         id_size: 0,
     };
-    env::generate_kernel(&cid, DtorParams::METHOD, &params, size_of_val(&params) as u32, &funds, 0, &sig, 0, "Destroy contract\0".as_ptr(), 0);
+    env::generate_kernel(
+        &cid,
+        DtorParams::METHOD,
+        &params,
+        size_of_val(&params) as u32,
+        &funds,
+        0,
+        &sig,
+        0,
+        "Destroy contract\0".as_ptr(),
+        0,
+    );
 }
 
-fn on_action_view_contracts(_unused: ContractID) {
-}
+fn on_action_view_contracts(_unused: ContractID) {}
 
-fn on_action_view_contract_params(_cid: ContractID) {
-}
+fn on_action_view_contract_params(_cid: ContractID) {}
 
 fn on_action_send_msg(cid: ContractID) {
     let funds = FundsChange {
@@ -60,11 +78,19 @@ fn on_action_send_msg(cid: ContractID) {
     env::doc_get_num32("key\0", &mut key);
     let mut secret: u32 = Default::default();
     env::doc_get_num32("secret\0", &mut secret);
-    let params = SendMsgParams {
-        key,
-        secret,
-    };
-    env::generate_kernel(&cid, SendMsgParams::METHOD, &params, size_of_val(&params) as u32, &funds, 0, &sig, 0, "Send secret\0".as_ptr(), 0);
+    let params = SendMsgParams { key, secret };
+    env::generate_kernel(
+        &cid,
+        SendMsgParams::METHOD,
+        &params,
+        size_of_val(&params) as u32,
+        &funds,
+        0,
+        &sig,
+        0,
+        "Send secret\0".as_ptr(),
+        0,
+    );
 }
 
 fn on_action_get_my_msg(cid: ContractID) {
@@ -85,8 +111,7 @@ fn on_action_get_my_msg(cid: ContractID) {
 
 #[no_mangle]
 #[allow(non_snake_case)]
-fn Method_0() {
-}
+fn Method_0() {}
 
 #[no_mangle]
 #[allow(non_snake_case)]
@@ -95,7 +120,7 @@ fn Method_1() {
 
     const VALID_USER_ACTIONS: [(&str, ActionFunc); 2] = [
         ("send_secret\0", on_action_send_msg),
-        ("get_secret\0", on_action_get_my_msg)
+        ("get_secret\0", on_action_get_my_msg),
     ];
 
     const VALID_MANAGER_ACTIONS: [(&str, ActionFunc); 4] = [
@@ -115,7 +140,12 @@ fn Method_1() {
 
     let mut action_map: ActionsMap = &INVALID_ROLE_ACTIONS;
     for i in 0..VALID_ROLES.len() {
-        if env::memcmp(&role, VALID_ROLES[i].0.as_ptr(), VALID_ROLES[i].0.len() as u32) == 0 {
+        if env::memcmp(
+            &role,
+            VALID_ROLES[i].0.as_ptr(),
+            VALID_ROLES[i].0.len() as u32,
+        ) == 0
+        {
             action_map = VALID_ROLES[i].1;
             break;
         }
@@ -130,7 +160,12 @@ fn Method_1() {
     env::doc_get_text("action\0", &mut action, 32);
 
     for i in 0..action_map.len() {
-        if env::memcmp(&action, action_map[i].0.as_ptr(), action_map[i].0.len() as u32) == 0 {
+        if env::memcmp(
+            &action,
+            action_map[i].0.as_ptr(),
+            action_map[i].0.len() as u32,
+        ) == 0
+        {
             let mut cid: ContractID = [0; 32];
             env::doc_get_blob("cid\0", &mut cid, 32);
             action_map[i].1(cid);
