@@ -6,6 +6,7 @@ use common::root::Env;
 use common::root::ContractID;
 use common::root::FundsChange;
 use common::root::SigRequest;
+use common::root::KeyTag;
 use common::*;
 
 type ActionFunc = fn(cid: ContractID);
@@ -48,9 +49,38 @@ fn on_action_view_contract_params(cid: ContractID) {
 }
 
 fn on_action_send_msg(cid: ContractID) {
+    let mut params = SendMsgParams {
+        key: 0,
+        secret: 0,
+    };
+    let funds = FundsChange {
+        m_Amount: 0,
+        m_Aid: 0,
+        m_Consume: 0,
+    };
+    let sig = SigRequest {
+        m_pID: 0 as *const u32,
+        m_nID: 0,
+    };
+    Env::DocGetNum32("key\0", &mut params.key);
+    Env::DocGetNum32("secret\0", &mut params.secret);
+    Env::GenerateKernel(&cid, SendMsgParams::kMethod, &params, 8, &funds, 0, &sig, 0, "Send secret\0".as_ptr(), 0);
 }
 
 fn on_action_get_my_msg(cid: ContractID) {
+    let mut key_u32: u32 = Default::default();
+    Env::DocGetNum32("key\0", &mut key_u32);
+
+    let key = Env::Key_T::<u32> {
+        prefix: Env::KeyPrefix {
+            cid,
+            tag: KeyTag::kInternal,
+        },
+        key_in_contract: key_u32,
+    };
+    let mut secret: u32 = Default::default();
+    Env::VarReader::Read(&key, 37, &mut secret, 4);
+    Env::DocAddNum32("Your secret:\0", secret);
 }
 
 #[no_mangle]
@@ -100,7 +130,7 @@ fn Method_1() {
     for i in 0..action_map.len() {
         if Env::Memcmp(&action, action_map[i].0.as_ptr(), action_map[i].0.len() as u32) == 0 {
             let mut cid: ContractID = [0; 32];
-            Env::DocGetBlob("cid", &mut cid, 32);
+            Env::DocGetBlob("cid\0", &mut cid, 32);
             action_map[i].1(cid);
             return;
         }
