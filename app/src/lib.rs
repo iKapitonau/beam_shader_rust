@@ -136,7 +136,7 @@ fn Method_1() {
     ];
 
     let mut role: [u8; 32] = Default::default();
-    env::doc_get_text("role\0", &mut role, 32);
+    env::doc_get_text("role\0", &mut role, size_of_val(&role) as u32);
 
     let mut action_map: ActionsMap = &INVALID_ROLE_ACTIONS;
     for i in 0..VALID_ROLES.len() {
@@ -157,7 +157,7 @@ fn Method_1() {
     }
 
     let mut action: [u8; 32] = Default::default();
-    env::doc_get_text("action\0", &mut action, 32);
+    env::doc_get_text("action\0", &mut action, size_of_val(&action) as u32);
 
     for i in 0..action_map.len() {
         if env::memcmp(
@@ -166,8 +166,8 @@ fn Method_1() {
             action_map[i].0.len() as u32,
         ) == 0
         {
-            let mut cid: ContractID = [0; 32];
-            env::doc_get_blob("cid\0", &mut cid, 32);
+            let mut cid: ContractID = Default::default();
+            env::doc_get_blob("cid\0", &mut cid, size_of_val(&cid) as u32);
             action_map[i].1(cid);
             return;
         }
