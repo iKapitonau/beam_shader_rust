@@ -2,6 +2,7 @@
 #![no_main]
 
 include!("bvm_bindings.rs");
+include!("contract_sid.rs");
 
 use core::panic::PanicInfo;
 

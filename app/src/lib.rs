@@ -1,9 +1,9 @@
 #![no_std]
 #![no_main]
 
-use ::common::common::env;
-use ::common::common::*;
-use ::common::*;
+use common::common::env;
+use common::common::*;
+use common::*;
 
 use core::mem::size_of_val;
 
@@ -41,7 +41,9 @@ fn on_action_destroy_contract(cid: ContractID) {
     );
 }
 
-fn on_action_view_contracts(_unused: ContractID) {}
+fn on_action_view_contracts(_unused: ContractID) {
+    env::enum_and_dump_contracts(&::common::SID);
+}
 
 fn on_action_view_contract_params(_cid: ContractID) {}
 

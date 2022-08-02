@@ -46,13 +46,13 @@ pub mod common {
         use crate::common::*;
         use core::mem::size_of_val;
 
-        #[repr(packed(1))]
+        #[repr(C, packed(1))]
         pub struct KeyPrefix {
             pub cid: ContractID,
             pub tag: u8,
         }
 
-        #[repr(packed(1))]
+        #[repr(C, packed(1))]
         pub struct Key<T> {
             pub prefix: KeyPrefix,
             pub key_in_contract: T,
@@ -75,7 +75,7 @@ pub mod common {
 
             fn close_internal(&self) {
                 if FLEXIBLE {
-                    if self.handle != 0 {
+                    if self.handle == 0 {
                         return;
                     }
                 }
@@ -91,6 +91,28 @@ pub mod common {
                 repeat: u8,
             ) -> bool {
                 vars_move_next(self.handle, key, key_size, val, val_size, repeat) != 0
+            }
+
+            pub fn move_next_t<K, V>(&self, key: &mut K, value: &mut V) -> bool {
+                loop {
+                    let mut key_size: u32 = size_of_val(key) as u32;
+                    let mut value_size: u32 = size_of_val(value) as u32;
+                    if !self.move_next(
+                        key as *mut K as *mut usize,
+                        &mut key_size,
+                        value as *mut V as *mut usize,
+                        &mut value_size,
+                        0,
+                    ) {
+                        return false;
+                    }
+                    if size_of_val(key) as u32 == key_size
+                        && size_of_val(value) as u32 == value_size
+                    {
+                        break;
+                    }
+                }
+                true
             }
 
             pub fn read<K, V>(key: &K, value: &mut V) -> bool {
@@ -118,9 +140,97 @@ pub mod common {
                 r.close_internal();
                 ret
             }
+
+            pub fn r#enum<K, V>(&mut self, key: &K, value: &V) {
+                self.close_internal();
+                let key_size: u32 = size_of_val(key) as u32;
+                let value_size: u32 = size_of_val(value) as u32;
+                self.enum_internal(
+                    key as *const K as *const usize,
+                    key_size,
+                    value as *const V as *const usize,
+                    value_size,
+                );
+            }
         }
 
         pub type VarReader = VarReaderEx<false>;
+
+        #[repr(C, packed(1))]
+        struct SidCid {
+            sid: ShaderID,
+            cid: ContractID,
+        }
+
+        type KeySidCid = Key<SidCid>;
+
+        struct ContractsWalker {
+            pub key: KeySidCid,
+            pub height: Height,
+            pub reader: VarReaderEx<true>,
+        }
+
+        impl ContractsWalker {
+            pub fn r#enum(&mut self, sid: &ShaderID) {
+                let k0 = KeySidCid {
+                    prefix: KeyPrefix {
+                        cid: Default::default(),
+                        tag: KeyTag::SID_CID,
+                    },
+                    key_in_contract: SidCid {
+                        cid: Default::default(),
+                        sid: *sid,
+                    },
+                };
+                let k1 = KeySidCid {
+                    prefix: KeyPrefix { ..k0.prefix },
+                    key_in_contract: SidCid {
+                        cid: [0xff; 32],
+                        ..k0.key_in_contract
+                    },
+                };
+                self.reader.r#enum(&k0, &k1);
+            }
+
+            pub fn move_next(&mut self) -> bool {
+                if !self.reader.move_next_t(&mut self.key, &mut self.height) {
+                    return false;
+                }
+                self.height = u64::from_be(self.height);
+                return true;
+            }
+        }
+
+        pub fn enum_and_dump_contracts(sid: &ShaderID) {
+            doc_add_array("contracts\0");
+
+            let mut wlk = ContractsWalker {
+                key: KeySidCid {
+                    prefix: KeyPrefix {
+                        cid: [0; 32],
+                        tag: 0,
+                    },
+                    key_in_contract: SidCid {
+                        cid: [0; 32],
+                        sid: [1; 32],
+                    },
+                },
+                height: 0,
+                reader: VarReaderEx::<true> { handle: 0 },
+            };
+            wlk.r#enum(&sid);
+            while wlk.move_next() {
+                doc_add_group("\0");
+                doc_add_blob(
+                    "cid\0",
+                    &wlk.key.key_in_contract.cid,
+                    size_of_val(&wlk.key.key_in_contract.cid) as u32,
+                );
+                doc_add_num64("height\0", wlk.height);
+                doc_close_group();
+            }
+            doc_close_array();
+        }
 
         pub fn save_var<K, V>(
             key: *const K,

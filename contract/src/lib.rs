@@ -1,9 +1,9 @@
 #![no_std]
 #![no_main]
 
-use ::common::common::env;
-use ::common::common::*;
-use ::common::*;
+use common::common::env;
+use common::common::*;
+use common::*;
 
 use core::mem::size_of_val;
 
