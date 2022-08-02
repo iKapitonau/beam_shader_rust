@@ -12,23 +12,14 @@ type ActionsMap<'a> = &'a [(&'a str, ActionFunc)];
 
 fn on_action_create_contract(_unused: ContractID) {
     let params = InitialParams { state: 333 };
-    let funds = FundsChange {
-        amount: 0,
-        aid: 0,
-        consume: 0,
-    };
-    let sig = SigRequest {
-        id_ptr: 0 as *const usize,
-        id_size: 0,
-    };
     env::generate_kernel(
         &Default::default(),
         InitialParams::METHOD,
         &params,
         size_of_val(&params) as u32,
-        &funds,
+        0 as *const FundsChange,
         0,
-        &sig,
+        0 as *const SigRequest,
         0,
         "Create contract\0".as_ptr(),
         0,
@@ -36,24 +27,14 @@ fn on_action_create_contract(_unused: ContractID) {
 }
 
 fn on_action_destroy_contract(cid: ContractID) {
-    let params = DtorParams {};
-    let funds = FundsChange {
-        amount: 0,
-        aid: 0,
-        consume: 0,
-    };
-    let sig = SigRequest {
-        id_ptr: 0 as *const usize,
-        id_size: 0,
-    };
     env::generate_kernel(
         &cid,
         DtorParams::METHOD,
-        &params,
-        size_of_val(&params) as u32,
-        &funds,
+        0 as *const DtorParams,
         0,
-        &sig,
+        0 as *const FundsChange,
+        0,
+        0 as *const SigRequest,
         0,
         "Destroy contract\0".as_ptr(),
         0,
@@ -65,15 +46,6 @@ fn on_action_view_contracts(_unused: ContractID) {}
 fn on_action_view_contract_params(_cid: ContractID) {}
 
 fn on_action_send_msg(cid: ContractID) {
-    let funds = FundsChange {
-        amount: 0,
-        aid: 0,
-        consume: 0,
-    };
-    let sig = SigRequest {
-        id_ptr: 0 as *const usize,
-        id_size: 0,
-    };
     let mut key: u32 = Default::default();
     env::doc_get_num32("key\0", &mut key);
     let mut secret: u32 = Default::default();
@@ -84,9 +56,9 @@ fn on_action_send_msg(cid: ContractID) {
         SendMsgParams::METHOD,
         &params,
         size_of_val(&params) as u32,
-        &funds,
+        0 as *const FundsChange,
         0,
-        &sig,
+        0 as *const SigRequest,
         0,
         "Send secret\0".as_ptr(),
         0,
