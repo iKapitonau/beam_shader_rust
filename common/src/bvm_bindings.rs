@@ -1,4 +1,4 @@
-pub mod root {
+pub mod common {
     pub type Height = u64;
     pub type Amount = u64;
     pub type AssetID = u32;
@@ -43,7 +43,7 @@ pub mod root {
     }
 
     pub mod env {
-        use crate::root::*;
+        use crate::common::*;
         use core::mem::size_of_val;
 
         #[repr(packed(1))]
