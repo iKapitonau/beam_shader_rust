@@ -39,7 +39,70 @@ fn on_action_withdraw(_cid: ContractID) {}
 
 #[no_mangle]
 #[allow(non_snake_case)]
-fn Method_0() {}
+fn Method_0() {
+    env::doc_add_group("\0");
+    env::doc_add_group("roles\0");
+    env::doc_add_group("manager\0");
+
+    env::doc_add_group("create\0");
+    env::doc_close_group(); // create
+
+    env::doc_add_group("destroy\0");
+    env::doc_add_text("cid\0", "ContractID\0".as_ptr());
+    env::doc_close_group(); // destroy
+
+    env::doc_add_group("view\0");
+    env::doc_close_group(); // view
+
+    env::doc_add_group("view_account\0");
+    env::doc_add_text("cid\0", "ContractID\0".as_ptr());
+    env::doc_add_text("pubkey\0", "PubKey\0".as_ptr());
+    env::doc_close_group(); // view_account
+
+    env::doc_add_group("view_accounts\0");
+    env::doc_add_text("cid\0", "ContractID\0".as_ptr());
+    env::doc_close_group(); // view_accounts
+
+    env::doc_add_group("view_logs\0");
+    env::doc_add_text("cid\0", "ContractID\0".as_ptr());
+    env::doc_close_group(); // view_logs
+
+    env::doc_close_group(); // manager
+    env::doc_add_group("my_account\0");
+        
+    env::doc_add_group("deposit\0");
+    env::doc_add_text("cid\0", "ContractID\0".as_ptr());
+    env::doc_add_text("amount\0", "Amount\0".as_ptr());
+    env::doc_add_text("aid\0", "AssetID\0".as_ptr());
+    env::doc_add_text("cosigner\0", "uint32_t\0".as_ptr());
+    env::doc_add_text("foreign_key\0", "PubKey\0".as_ptr());
+    env::doc_close_group(); // deposit
+
+    env::doc_add_group("get_key\0");
+    env::doc_add_text("cid\0", "ContractID\0".as_ptr());
+    env::doc_close_group(); // get_key
+
+    env::doc_add_group("get_proof\0");
+    env::doc_add_text("cid\0", "ContractID\0".as_ptr());
+    env::doc_add_text("aid\0", "AssetID\0".as_ptr());
+    env::doc_close_group(); // get_proof
+
+    env::doc_add_group("view\0");
+    env::doc_add_text("cid\0", "ContractID\0".as_ptr());
+    env::doc_close_group(); // view
+
+    env::doc_add_group("withdraw\0");
+    env::doc_add_text("cid\0", "ContractID\0".as_ptr());
+    env::doc_add_text("amount\0", "Amount\0".as_ptr());
+    env::doc_add_text("aid\0", "AssetID\0".as_ptr());
+    env::doc_add_text("cosigner\0", "uint32_t\0".as_ptr());
+    env::doc_add_text("foreign_key\0", "PubKey\0".as_ptr());
+    env::doc_close_group(); // withdraw
+
+    env::doc_close_group(); // my_account
+    env::doc_close_group(); // roles
+    env::doc_close_group(); // \0
+}
 
 #[no_mangle]
 #[allow(non_snake_case)]
