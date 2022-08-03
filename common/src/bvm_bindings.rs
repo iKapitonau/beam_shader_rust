@@ -11,8 +11,8 @@ pub mod common {
     pub mod merkle {
         #[repr(C)]
         pub struct Node {
-            first: bool,
-            second: [u8; 32],
+            pub first: bool,
+            pub second: [u8; 32],
         }
     }
 
@@ -41,7 +41,7 @@ pub mod common {
     impl SigRequest {
         pub fn get_pk(&self, pk: &mut PubKey) {
             let id_ptr: *const usize = self.id_ptr;
-            env::derive_pk(pk, &id_ptr, self.id_size);
+            env::derive_pk(pk, id_ptr, self.id_size);
         }
     }
 
@@ -417,7 +417,7 @@ pub mod common {
         pub fn load_var<K, V>(
             key: *const K,
             key_size: u32,
-            value: *const V,
+            value: *mut V,
             value_size: u32,
             tag: u8,
         ) -> u32 {
@@ -425,7 +425,7 @@ pub mod common {
                 return _LoadVar(
                     key as *const usize,
                     key_size,
-                    value as *const usize,
+                    value as *mut usize,
                     value_size,
                     tag,
                 );
@@ -732,7 +732,7 @@ pub mod common {
             fn _LoadVar(
                 pKey: *const usize,
                 nKey: u32,
-                pVal: *const usize,
+                pVal: *mut usize,
                 nVal: u32,
                 nType: u8,
             ) -> u32;
