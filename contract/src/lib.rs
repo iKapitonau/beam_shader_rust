@@ -9,18 +9,14 @@ use core::mem::size_of_val;
 
 fn load_account(key: &Key) -> Amount {
     let mut ret: Amount = Default::default();
-    if env::load_var(
-        &key,
+    env::load_var(
+        key,
         size_of_val(key) as u32,
         &mut ret,
         size_of_val(&ret) as u32,
         KeyTag::INTERNAL,
-    ) != 0
-    {
-        ret
-    } else {
-        0
-    }
+    );
+    ret
 }
 
 fn save_account(key: &Key, amount: Amount) {
