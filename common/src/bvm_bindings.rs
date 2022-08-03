@@ -232,6 +232,78 @@ pub mod common {
             doc_close_array();
         }
 
+        pub fn funds_lock(aid: AssetID, amount: Amount) {
+            unsafe {
+                return _FundsLock(aid, amount);
+            }
+        }
+
+        pub fn funds_unlock(aid: AssetID, amount: Amount) {
+            unsafe {
+                return _FundsUnlock(aid, amount);
+            }
+        }
+
+        pub fn add_sig(pubkey: &PubKey) {
+            unsafe {
+                return _AddSig(pubkey);
+            }
+        }
+
+        pub fn halt_if(condition: bool) {
+            unsafe {
+                return _Halt_if(condition);
+            }
+        }
+
+        pub fn emit_log<K, V>(
+            key: *const K,
+            key_size: u32,
+            value: *const V,
+            value_size: u32,
+            tag: u8,
+        ) -> u32 {
+            unsafe {
+                return _EmitLog(
+                    key as *const usize,
+                    key_size,
+                    value as *const usize,
+                    value_size,
+                    tag,
+                );
+            }
+        }
+
+        pub fn load_var<K, V>(
+            key: *const K,
+            key_size: u32,
+            value: *const V,
+            value_size: u32,
+            tag: u8,
+        ) -> u32 {
+            unsafe {
+                return _LoadVar(
+                    key as *const usize,
+                    key_size,
+                    value as *const usize,
+                    value_size,
+                    tag,
+                );
+            }
+        }
+
+        pub fn del_var<K>(key: *const K, key_size: u32) -> u32 {
+            unsafe {
+                return _SaveVar(
+                    key as *const usize,
+                    key_size,
+                    0 as *const usize,
+                    0,
+                    KeyTag::INTERNAL,
+                );
+            }
+        }
+
         pub fn save_var<K, V>(
             key: *const K,
             key_size: u32,
@@ -423,6 +495,36 @@ pub mod common {
         }
 
         extern "C" {
+            #[link_name = "FundsLock"]
+            fn _FundsLock(aid: AssetID, amount: Amount);
+
+            #[link_name = "FundsUnlock"]
+            fn _FundsUnlock(aid: AssetID, amount: Amount);
+
+            #[link_name = "AddSig"]
+            fn _AddSig(pubkey: *const PubKey);
+
+            #[link_name = "Halt_if"]
+            fn _Halt_if(condition: bool);
+
+            #[link_name = "EmitLog"]
+            fn _EmitLog(
+                pKey: *const usize,
+                nKey: u32,
+                pVal: *const usize,
+                nVal: u32,
+                nType: u8,
+            ) -> u32;
+
+            #[link_name = "LoadVar"]
+            fn _LoadVar(
+                pKey: *const usize,
+                nKey: u32,
+                pVal: *const usize,
+                nVal: u32,
+                nType: u8,
+            ) -> u32;
+
             #[link_name = "SaveVar"]
             fn _SaveVar(
                 pKey: *const usize,
