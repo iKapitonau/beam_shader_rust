@@ -29,6 +29,12 @@ pub mod common {
         pub id_size: u32,
     }
 
+    #[repr(C)]
+    pub struct HeightPos {
+        pub height: Height,
+        pub pos: u32,
+    }
+
     pub struct KeyTag {}
 
     impl KeyTag {
@@ -155,6 +161,77 @@ pub mod common {
         }
 
         pub type VarReader = VarReaderEx<false>;
+
+        pub struct LogReader {
+            handle: u32,
+            pub pos: HeightPos,
+        }
+
+        impl LogReader {
+            pub fn new(
+                key1: *const usize,
+                key1_size: u32,
+                key2: *const usize,
+                key2_size: u32,
+                pos_min: *const HeightPos,
+                pos_max: *const HeightPos,
+            ) -> LogReader {
+                LogReader {
+                    handle: logs_enum(key1, key1_size, key2, key2_size, pos_min, pos_max),
+                    pos: HeightPos {
+                        height: Default::default(),
+                        pos: Default::default(),
+                    },
+                }
+            }
+
+            pub fn move_next(
+                &mut self,
+                key: *mut usize,
+                key_size: &mut u32,
+                val: *mut usize,
+                val_size: &mut u32,
+                repeat: u8,
+            ) -> bool {
+                logs_move_next(
+                    self.handle,
+                    key,
+                    key_size,
+                    val,
+                    val_size,
+                    &mut self.pos,
+                    repeat,
+                ) != 0
+            }
+
+            pub fn move_next_t<K, V>(&mut self, key: &mut K, value: &mut V) -> bool {
+                loop {
+                    let mut key_size: u32 = size_of_val(key) as u32;
+                    let mut value_size: u32 = size_of_val(value) as u32;
+                    if !self.move_next(
+                        key as *mut K as *mut usize,
+                        &mut key_size,
+                        value as *mut V as *mut usize,
+                        &mut value_size,
+                        0,
+                    ) {
+                        return false;
+                    }
+                    if size_of_val(key) as u32 == key_size
+                        && size_of_val(value) as u32 == value_size
+                    {
+                        break;
+                    }
+                }
+                true
+            }
+        }
+
+        impl Drop for LogReader {
+            fn drop(&mut self) {
+                logs_close(self.handle);
+            }
+        }
 
         #[repr(C, packed(1))]
         struct SidCid {
@@ -424,6 +501,54 @@ pub mod common {
             }
         }
 
+        pub fn logs_close(slot: u32) {
+            unsafe {
+                return _Logs_Close(slot);
+            }
+        }
+
+        pub fn logs_enum<U, V>(
+            key0: *const U,
+            key0_size: u32,
+            key1: *const V,
+            key1_size: u32,
+            pos_min: *const HeightPos,
+            pos_max: *const HeightPos,
+        ) -> u32 {
+            unsafe {
+                return _Logs_Enum(
+                    key0 as *const usize,
+                    key0_size,
+                    key1 as *const usize,
+                    key1_size,
+                    pos_min,
+                    pos_max,
+                );
+            }
+        }
+
+        pub fn logs_move_next<K, V>(
+            slot: u32,
+            key: *mut K,
+            key_size: *mut u32,
+            val: *mut V,
+            val_size: *mut u32,
+            pos: *const HeightPos,
+            repeat: u8,
+        ) -> u8 {
+            unsafe {
+                return _Logs_MoveNext(
+                    slot,
+                    key as *mut usize,
+                    key_size,
+                    val as *mut usize,
+                    val_size,
+                    pos,
+                    repeat,
+                );
+            }
+        }
+
         pub fn vars_close(slot: u32) {
             unsafe {
                 return _Vars_Close(slot);
@@ -603,6 +728,30 @@ pub mod common {
                 nKey: *mut u32,
                 pVal: *mut usize,
                 nVal: *mut u32,
+                nRepeat: u8,
+            ) -> u8;
+
+            #[link_name = "Logs_Close"]
+            pub fn _Logs_Close(iSlot: u32);
+
+            #[link_name = "Logs_Enum"]
+            pub fn _Logs_Enum(
+                pKey0: *const usize,
+                nKey0: u32,
+                pKey1: *const usize,
+                nKey1: u32,
+                pos_min: *const HeightPos,
+                pos_max: *const HeightPos,
+            ) -> u32;
+
+            #[link_name = "Logs_MoveNext"]
+            pub fn _Logs_MoveNext(
+                iSlot: u32,
+                pKey: *mut usize,
+                nKey: *mut u32,
+                pVal: *mut usize,
+                nVal: *mut u32,
+                pos: *const HeightPos,
                 nRepeat: u8,
             ) -> u8;
 
