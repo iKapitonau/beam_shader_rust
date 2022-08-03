@@ -1,87 +1,41 @@
 #![no_std]
 #![no_main]
 
-use common::common::env;
-use common::common::*;
-use common::*;
+use ::common::common::env;
+use ::common::common::*;
+use ::common::*;
 
 use core::mem::size_of_val;
 
 type ActionFunc = fn(cid: ContractID);
 type ActionsMap<'a> = &'a [(&'a str, ActionFunc)];
 
-fn on_action_create_contract(_unused: ContractID) {
-    let params = InitialParams { state: 333 };
-    env::generate_kernel(
-        &Default::default(),
-        InitialParams::METHOD,
-        &params,
-        size_of_val(&params) as u32,
-        0 as *const FundsChange,
-        0,
-        0 as *const SigRequest,
-        0,
-        "Create contract\0".as_ptr(),
-        0,
-    );
-}
+// MANAGER ACTIONS
 
-fn on_action_destroy_contract(cid: ContractID) {
-    env::generate_kernel(
-        &cid,
-        DtorParams::METHOD,
-        0 as *const DtorParams,
-        0,
-        0 as *const FundsChange,
-        0,
-        0 as *const SigRequest,
-        0,
-        "Destroy contract\0".as_ptr(),
-        0,
-    );
-}
+fn on_action_create_contract(_unused: ContractID) {}
+
+fn on_action_destroy_contract(_cid: ContractID) {}
 
 fn on_action_view_contracts(_unused: ContractID) {
     env::enum_and_dump_contracts(&::common::SID);
 }
 
-fn on_action_view_contract_params(_cid: ContractID) {}
+fn on_action_view_logs(_cid: ContractID) {}
 
-fn on_action_send_msg(cid: ContractID) {
-    let mut key: u32 = Default::default();
-    env::doc_get_num32("key\0", &mut key);
-    let mut secret: u32 = Default::default();
-    env::doc_get_num32("secret\0", &mut secret);
-    let params = SendMsgParams { key, secret };
-    env::generate_kernel(
-        &cid,
-        SendMsgParams::METHOD,
-        &params,
-        size_of_val(&params) as u32,
-        0 as *const FundsChange,
-        0,
-        0 as *const SigRequest,
-        0,
-        "Send secret\0".as_ptr(),
-        0,
-    );
-}
+fn on_action_view_accounts(_cid: ContractID) {}
 
-fn on_action_get_my_msg(cid: ContractID) {
-    let mut key_u32: u32 = Default::default();
-    env::doc_get_num32("key\0", &mut key_u32);
+fn on_action_view_account(_cid: ContractID) {}
 
-    let key = env::Key::<u32> {
-        prefix: env::KeyPrefix {
-            cid,
-            tag: KeyTag::INTERNAL,
-        },
-        key_in_contract: key_u32,
-    };
-    let mut secret: u32 = Default::default();
-    env::VarReader::read(&key, &mut secret);
-    env::doc_add_num32("Your secret:\0", secret);
-}
+// MY_ACCOUNT ACTIONS
+fn on_action_view(_cid: ContractID) {}
+
+fn on_action_get_key(_cid: ContractID) {}
+
+fn on_action_get_proof(_cid: ContractID) {}
+
+fn on_action_deposit(_cid: ContractID) {}
+
+fn on_action_withdraw(_cid: ContractID) {}
 
 #[no_mangle]
 #[allow(non_snake_case)]
@@ -92,20 +46,25 @@ fn Method_0() {}
 fn Method_1() {
     const INVALID_ROLE_ACTIONS: [(&str, ActionFunc); 0] = [];
 
-    const VALID_USER_ACTIONS: [(&str, ActionFunc); 2] = [
-        ("send_secret\0", on_action_send_msg),
-        ("get_secret\0", on_action_get_my_msg),
+    const VALID_MY_ACCOUNT_ACTIONS: [(&str, ActionFunc); 5] = [
+        ("view\0", on_action_view),
+        ("get_key\0", on_action_get_key),
+        ("get_proof\0", on_action_get_proof),
+        ("deposit\0", on_action_deposit),
+        ("withdraw\0", on_action_withdraw),
     ];
 
-    const VALID_MANAGER_ACTIONS: [(&str, ActionFunc); 4] = [
-        ("create_contract\0", on_action_create_contract),
-        ("destroy_contract\0", on_action_destroy_contract),
-        ("view_contracts\0", on_action_view_contracts),
-        ("view_contract_params\0", on_action_view_contract_params),
+    const VALID_MANAGER_ACTIONS: [(&str, ActionFunc); 6] = [
+        ("create\0", on_action_create_contract),
+        ("destroy\0", on_action_destroy_contract),
+        ("view\0", on_action_view_contracts),
+        ("view_logs\0", on_action_view_logs),
+        ("view_accounts\0", on_action_view_accounts),
+        ("view_account\0", on_action_view_account),
     ];
 
     const VALID_ROLES: [(&str, ActionsMap); 2] = [
-        ("user\0", &VALID_USER_ACTIONS),
+        ("my_account\0", &VALID_MY_ACCOUNT_ACTIONS),
         ("manager\0", &VALID_MANAGER_ACTIONS),
     ];
 
