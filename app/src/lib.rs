@@ -12,9 +12,35 @@ type ActionsMap<'a> = &'a [(&'a str, ActionFunc)];
 
 // MANAGER ACTIONS
 
-fn on_action_create_contract(_unused: ContractID) {}
+fn on_action_create_contract(_unused: ContractID) {
+    env::generate_kernel(
+        0 as *const ContractID,
+        0,
+        0 as *const usize,
+        0,
+        0 as *const FundsChange,
+        0,
+        0 as *const SigRequest,
+        0,
+        "Create Vault contract\0".as_ptr(),
+        0,
+    );
+}
 
-fn on_action_destroy_contract(_cid: ContractID) {}
+fn on_action_destroy_contract(cid: ContractID) {
+    env::generate_kernel(
+        &cid,
+        1,
+        0 as *const usize,
+        0,
+        0 as *const FundsChange,
+        0,
+        0 as *const SigRequest,
+        0,
+        "Destroy Vault contract\0".as_ptr(),
+        0,
+    );
+}
 
 fn on_action_view_contracts(_unused: ContractID) {
     env::enum_and_dump_contracts(&::common::SID);
@@ -69,7 +95,7 @@ fn Method_0() {
 
     env::doc_close_group(); // manager
     env::doc_add_group("my_account\0");
-        
+
     env::doc_add_group("deposit\0");
     env::doc_add_text("cid\0", "ContractID\0".as_ptr());
     env::doc_add_text("amount\0", "Amount\0".as_ptr());
