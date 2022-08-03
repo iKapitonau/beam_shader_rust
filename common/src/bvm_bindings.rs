@@ -8,6 +8,14 @@ pub mod common {
     pub type HashValue = [u8; 32usize];
     pub type SecpScalarData = [u8; 32usize];
 
+    pub mod merkle {
+        #[repr(C)]
+        pub struct Node {
+            first: bool,
+            second: [u8; 32],
+        }
+    }
+
     #[repr(C)]
     #[derive(Copy, Clone)]
     pub struct SecpPointData {
@@ -323,6 +331,30 @@ pub mod common {
             doc_close_array();
         }
 
+        pub fn var_get_proof<K, V>(
+            key: *const K,
+            key_size: u32,
+            val: *mut *const V,
+            val_size: *mut u32,
+            proof: *mut *const merkle::Node,
+        ) -> u32 {
+            unsafe {
+                return _VarGetProof(
+                    key as *const usize,
+                    key_size,
+                    val as *mut *const usize,
+                    val_size,
+                    proof,
+                );
+            }
+        }
+
+        pub fn derive_pk<T>(pubkey: &mut PubKey, id: *const T, id_size: u32) {
+            unsafe {
+                return _DerivePk(pubkey, id as *const usize, id_size);
+            }
+        }
+
         pub fn funds_lock(aid: AssetID, amount: Amount) {
             unsafe {
                 return _FundsLock(aid, amount);
@@ -634,6 +666,18 @@ pub mod common {
         }
 
         extern "C" {
+            #[link_name = "VarGetProof"]
+            fn _VarGetProof(
+                pKey: *const usize,
+                nKey: u32,
+                ppVal: *mut *const usize,
+                pnVal: *mut u32,
+                ppProof: *mut *const merkle::Node,
+            ) -> u32;
+
+            #[link_name = "DerivePk"]
+            fn _DerivePk(pubkey: *mut PubKey, pID: *const usize, nID: u32);
+
             #[link_name = "FundsLock"]
             fn _FundsLock(aid: AssetID, amount: Amount);
 

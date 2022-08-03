@@ -5,12 +5,24 @@ use ::common::common::env;
 use ::common::common::*;
 use ::common::*;
 
+use core::mem::size_of;
 use core::mem::size_of_val;
 
 type ActionFunc = fn(cid: ContractID);
 type ActionsMap<'a> = &'a [(&'a str, ActionFunc)];
 
 type KeyAccount = env::Key<Key>;
+
+#[repr(C, packed(1))]
+struct MyAccountID {
+    pub cid: ContractID,
+    pub ctx: u8,
+}
+
+fn derive_my_pk(pubkey: &mut PubKey, cid: &ContractID) {
+    let my_id = MyAccountID { cid: *cid, ctx: 0 };
+    env::derive_pk(pubkey, &my_id, size_of_val(&my_id) as u32);
+}
 
 fn dump_accounts(r: &mut env::VarReader) {
     env::doc_add_array("accounts\0");
@@ -205,11 +217,61 @@ fn on_action_view_account(cid: ContractID) {
 }
 
 // MY_ACCOUNT ACTIONS
-fn on_action_view(_cid: ContractID) {}
+fn on_action_view(cid: ContractID) {
+    let mut pubkey = PubKey {
+        x: Default::default(),
+        y: Default::default(),
+    };
+    derive_my_pk(&mut pubkey, &cid);
+    dump_account(&pubkey, &cid);
+}
 
-fn on_action_get_key(_cid: ContractID) {}
+fn on_action_get_key(cid: ContractID) {
+    let mut pubkey = PubKey {
+        x: Default::default(),
+        y: Default::default(),
+    };
+    derive_my_pk(&mut pubkey, &cid);
+    env::doc_add_blob("key\0", &mut pubkey, size_of_val(&pubkey) as u32);
+}
 
-fn on_action_get_proof(_cid: ContractID) {}
+fn on_action_get_proof(cid: ContractID) {
+    let mut aid: AssetID = Default::default();
+    env::doc_get_num32("aid\0", &mut aid);
+    let mut key = KeyAccount {
+        prefix: env::KeyPrefix {
+            cid,
+            tag: KeyTag::INTERNAL,
+        },
+        key_in_contract: Key {
+            account: SecpPointData {
+                x: Default::default(),
+                y: Default::default(),
+            },
+            aid,
+        },
+    };
+    derive_my_pk(&mut key.key_in_contract.account, &cid);
+
+    let mut amount: *const Amount = 0 as *mut Amount;
+    let mut size_val: u32 = Default::default();
+    let mut proof: *const merkle::Node = 0 as *const merkle::Node;
+    let proof_size: u32 = env::var_get_proof(
+        &key,
+        size_of_val(&key) as u32,
+        &mut amount,
+        &mut size_val,
+        &mut proof,
+    );
+    if proof_size > 0 && size_of_val(&amount) as u32 == size_val {
+        env::doc_add_num64("Amount\0", unsafe { *amount });
+        env::doc_add_blob(
+            "proof\0",
+            proof,
+            size_of::<merkle::Node> as u32 * proof_size,
+        );
+    }
+}
 
 fn on_action_deposit(_cid: ContractID) {}
 
