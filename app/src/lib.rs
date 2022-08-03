@@ -10,6 +10,68 @@ use core::mem::size_of_val;
 type ActionFunc = fn(cid: ContractID);
 type ActionsMap<'a> = &'a [(&'a str, ActionFunc)];
 
+type KeyAccount = env::Key<Key>;
+
+fn dump_accounts(r: &mut env::VarReader) {
+    env::doc_add_array("accounts\0");
+    loop {
+        let mut key = KeyAccount {
+            prefix: env::KeyPrefix {
+                cid: Default::default(),
+                tag: KeyTag::INTERNAL,
+            },
+            key_in_contract: Key {
+                account: SecpPointData {
+                    x: Default::default(),
+                    y: Default::default(),
+                },
+                aid: Default::default(),
+            },
+        };
+        let mut amount: Amount = Default::default();
+
+        if !r.move_next_t(&mut key, &mut amount) {
+            break;
+        }
+        env::doc_add_group("\0");
+        env::doc_add_blob(
+            "Account\0",
+            &key.key_in_contract.account,
+            size_of_val(&key.key_in_contract.account) as u32,
+        );
+        env::doc_add_num32("AssetID\0", key.key_in_contract.aid);
+        env::doc_add_num64("Amount\0", amount);
+        env::doc_close_group();
+    }
+    env::doc_close_array();
+}
+
+fn dump_account(pubkey: &PubKey, cid: &ContractID) {
+    let k0 = KeyAccount {
+        prefix: env::KeyPrefix {
+            cid: *cid,
+            tag: KeyTag::INTERNAL,
+        },
+        key_in_contract: Key {
+            account: *pubkey,
+            aid: Default::default(),
+        },
+    };
+    let k1 = KeyAccount {
+        key_in_contract: Key {
+            aid: AssetID::MAX,
+            ..k0.key_in_contract
+        },
+        prefix: env::KeyPrefix { ..k0.prefix },
+    };
+    let mut r = env::VarReader::new(
+        &k0 as *const KeyAccount as *const usize,
+        size_of_val(&k0) as u32,
+        &k1 as *const KeyAccount as *const usize,
+        size_of_val(&k1) as u32,
+    );
+    dump_accounts(&mut r);
+}
 // MANAGER ACTIONS
 
 fn on_action_create_contract(_unused: ContractID) {
@@ -46,11 +108,101 @@ fn on_action_view_contracts(_unused: ContractID) {
     env::enum_and_dump_contracts(&::common::SID);
 }
 
-fn on_action_view_logs(_cid: ContractID) {}
+fn on_action_view_logs(cid: ContractID) {
+    let k0 = KeyAccount {
+        prefix: env::KeyPrefix {
+            cid,
+            tag: KeyTag::INTERNAL,
+        },
+        key_in_contract: Key {
+            account: SecpPointData {
+                x: Default::default(),
+                y: Default::default(),
+            },
+            aid: Default::default(),
+        },
+    };
+    let k1 = KeyAccount {
+        prefix: env::KeyPrefix { ..k0.prefix },
+        key_in_contract: Key {
+            account: SecpPointData {
+                x: [0xff; 32],
+                y: 0xff,
+            },
+            aid: AssetID::MAX,
+        },
+    };
 
-fn on_action_view_accounts(_cid: ContractID) {}
+    let mut lr: env::LogReader = env::LogReader::new(
+        &k0 as *const KeyAccount as *const usize,
+        size_of_val(&k0) as u32,
+        &k1 as *const KeyAccount as *const usize,
+        size_of_val(&k1) as u32,
+        0 as *const HeightPos,
+        0 as *const HeightPos,
+    );
+    env::doc_add_array("logs\0");
+    loop {
+        let mut key = KeyAccount {
+            prefix: env::KeyPrefix {
+                cid,
+                tag: KeyTag::INTERNAL,
+            },
+            key_in_contract: Key {
+                account: SecpPointData {
+                    x: Default::default(),
+                    y: Default::default(),
+                },
+                aid: Default::default(),
+            },
+        };
+        let mut val: Amount = Default::default();
 
-fn on_action_view_account(_cid: ContractID) {}
+        if !lr.move_next_t(&mut key, &mut val) {
+            break;
+        }
+
+        env::doc_add_group("\0");
+        env::doc_add_num64("Height\0", lr.pos.height);
+        env::doc_add_num32("Pos\0", lr.pos.pos);
+        env::doc_add_blob(
+            "Account\0",
+            &key.key_in_contract.account,
+            size_of_val(&key.key_in_contract.account) as u32,
+        );
+        env::doc_add_num32("AssetID\0", key.key_in_contract.aid);
+        env::doc_add_num64("Amount\0", val);
+        env::doc_close_group();
+    }
+    env::doc_close_array();
+}
+
+fn on_action_view_accounts(cid: ContractID) {
+    let k0 = env::KeyPrefix {
+        cid,
+        tag: KeyTag::INTERNAL,
+    };
+    let k1 = env::KeyPrefix {
+        cid,
+        tag: KeyTag::INTERNAL + 1,
+    };
+    let mut r = env::VarReader::new(
+        &k0 as *const env::KeyPrefix as *const usize,
+        size_of_val(&k0) as u32,
+        &k1 as *const env::KeyPrefix as *const usize,
+        size_of_val(&k1) as u32,
+    );
+    dump_accounts(&mut r);
+}
+
+fn on_action_view_account(cid: ContractID) {
+    let mut pubkey = PubKey {
+        x: Default::default(),
+        y: Default::default(),
+    };
+    env::doc_get_blob("pubkey\0", &mut pubkey, size_of_val(&pubkey) as u32);
+    dump_account(&pubkey, &cid);
+}
 
 // MY_ACCOUNT ACTIONS
 fn on_action_view(_cid: ContractID) {}

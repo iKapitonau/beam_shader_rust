@@ -9,6 +9,7 @@ pub mod common {
     pub type SecpScalarData = [u8; 32usize];
 
     #[repr(C)]
+    #[derive(Copy, Clone)]
     pub struct SecpPointData {
         pub x: [u8; 32usize],
         pub y: u8,
@@ -86,6 +87,19 @@ pub mod common {
                     }
                 }
                 vars_close(self.handle);
+            }
+
+            pub fn new(
+                key1: *const usize,
+                key1_size: u32,
+                key2: *const usize,
+                key2_size: u32,
+            ) -> VarReader {
+                let mut r = VarReader {
+                    handle: Default::default(),
+                };
+                r.enum_internal(key1, key1_size, key2, key2_size);
+                r
             }
 
             pub fn move_next(
