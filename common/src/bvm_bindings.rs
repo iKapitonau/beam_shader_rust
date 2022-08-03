@@ -38,6 +38,15 @@ pub mod common {
         pub id_size: u32,
     }
 
+    impl SigRequest {
+        pub fn get_pk(&self, pk: &mut PubKey) {
+            let id_ptr: *const usize = self.id_ptr;
+            env::derive_pk(pk, &id_ptr, self.id_size);
+        }
+    }
+
+    pub type KeyID = SigRequest;
+
     #[repr(C)]
     pub struct HeightPos {
         pub height: Height,
@@ -375,7 +384,15 @@ pub mod common {
 
         pub fn halt_if(condition: bool) {
             unsafe {
-                return _Halt_if(condition);
+                if condition {
+                    return _Halt();
+                }
+            }
+        }
+
+        pub fn halt() {
+            unsafe {
+                return _Halt();
             }
         }
 
@@ -463,6 +480,12 @@ pub mod common {
             }
         }
 
+        pub fn doc_get_num64(id: &str, out: *mut u64) -> u8 {
+            unsafe {
+                return _DocGetNum64(id.as_ptr() as *const usize, out);
+            }
+        }
+
         pub fn doc_get_num32(id: &str, out: *mut u32) -> u8 {
             unsafe {
                 return _DocGetNum32(id.as_ptr() as *const usize, out);
@@ -508,6 +531,12 @@ pub mod common {
         pub fn doc_close_array() {
             unsafe {
                 return _DocCloseArray();
+            }
+        }
+
+        pub fn mem_is_0<T>(ptr: *const T, size: u32) -> u8 {
+            unsafe {
+                return _Memis0(ptr as *const usize, size);
             }
         }
 
@@ -687,8 +716,8 @@ pub mod common {
             #[link_name = "AddSig"]
             fn _AddSig(pubkey: *const PubKey);
 
-            #[link_name = "Halt_if"]
-            fn _Halt_if(condition: bool);
+            #[link_name = "Halt"]
+            fn _Halt();
 
             #[link_name = "EmitLog"]
             fn _EmitLog(
@@ -729,6 +758,9 @@ pub mod common {
             #[link_name = "DocGetNum32"]
             pub fn _DocGetNum32(szID: *const usize, pOut: *mut u32) -> u8;
 
+            #[link_name = "DocGetNum64"]
+            pub fn _DocGetNum64(szID: *const usize, pOut: *mut u64) -> u8;
+
             #[link_name = "DocAddNum64"]
             pub fn _DocAddNum64(szID: *const usize, val: u64);
 
@@ -749,6 +781,9 @@ pub mod common {
 
             #[link_name = "DocCloseArray"]
             pub fn _DocCloseArray();
+
+            #[link_name = "Memis0"]
+            pub fn _Memis0(p: *const usize, sz: u32) -> u8;
 
             #[link_name = "Memset"]
             pub fn _Memset(pDst: *mut usize, val: u8, size: u32) -> *mut usize;
