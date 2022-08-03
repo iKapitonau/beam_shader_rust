@@ -19,6 +19,91 @@ struct MyAccountID {
     pub ctx: u8,
 }
 
+fn my_account_move(
+    deposit: bool,
+    cid: &ContractID,
+    foreign_key: &PubKey,
+    cosigner: u32,
+    amount: Amount,
+    aid: AssetID,
+) {
+    if amount == 0 {
+        env::doc_add_text("error\0", "amount must be non-zero\0".as_ptr());
+        return;
+    }
+    let mut args = Request {
+        amount,
+        key: Key {
+            account: PubKey {
+                x: Default::default(),
+                y: Default::default(),
+            },
+            aid,
+        },
+    };
+
+    let my_id = MyAccountID { cid: *cid, ctx: 0 };
+
+    let kid = KeyID {
+        id_ptr: &my_id as *const MyAccountID as *const usize,
+        id_size: size_of_val(&my_id) as u32,
+    };
+
+    /*
+    let my_pk = PubKey {
+        x: Default::default(),
+        y: Default::default(),
+    };
+    */
+
+    let is_multisig: bool = env::mem_is_0(foreign_key, size_of_val(foreign_key) as u32) == 0;
+    if is_multisig {
+        //let p0 = secp::Point {};
+        //let p1 = secp::Point {};
+        // TODO: after secp impl
+    } else {
+        kid.get_pk(&mut args.key.account);
+    }
+
+    let fc = FundsChange {
+        amount,
+        aid,
+        consume: deposit as u8,
+    };
+
+    if deposit {
+        env::generate_kernel(
+            cid,
+            Deposit::METHOD,
+            &args,
+            size_of_val(&args) as u32,
+            &fc,
+            1,
+            0 as *const SigRequest,
+            0,
+            "Deposit to Vault\0".as_ptr(),
+            0,
+        );
+    } else {
+        if is_multisig {
+            // TODO
+        } else {
+            env::generate_kernel(
+                cid,
+                Withdraw::METHOD,
+                &args,
+                size_of_val(&args) as u32,
+                &fc,
+                1,
+                &kid,
+                1,
+                "Withdraw from Vault\0".as_ptr(),
+                0,
+            );
+        }
+    }
+}
+
 fn derive_my_pk(pubkey: &mut PubKey, cid: &ContractID) {
     let my_id = MyAccountID { cid: *cid, ctx: 0 };
     env::derive_pk(pubkey, &my_id, size_of_val(&my_id) as u32);
@@ -273,9 +358,43 @@ fn on_action_get_proof(cid: ContractID) {
     }
 }
 
-fn on_action_deposit(_cid: ContractID) {}
+fn on_action_deposit(cid: ContractID) {
+    let mut aid: AssetID = Default::default();
+    let mut foreign_key = PubKey {
+        x: Default::default(),
+        y: Default::default(),
+    };
+    let mut cosigner: u32 = Default::default();
+    let mut amount: Amount = Default::default();
+    env::doc_get_num32("aid\0", &mut aid);
+    env::doc_get_blob(
+        "foreign_key\0",
+        &mut foreign_key,
+        size_of_val(&foreign_key) as u32,
+    );
+    env::doc_get_num32("cosigner\0", &mut cosigner);
+    env::doc_get_num64("amount\0", &mut amount);
+    my_account_move(true, &cid, &foreign_key, cosigner, amount, aid);
+}
 
-fn on_action_withdraw(_cid: ContractID) {}
+fn on_action_withdraw(cid: ContractID) {
+    let mut aid: AssetID = Default::default();
+    let mut foreign_key = PubKey {
+        x: Default::default(),
+        y: Default::default(),
+    };
+    let mut cosigner: u32 = Default::default();
+    let mut amount: Amount = Default::default();
+    env::doc_get_num32("aid\0", &mut aid);
+    env::doc_get_blob(
+        "foreign_key\0",
+        &mut foreign_key,
+        size_of_val(&foreign_key) as u32,
+    );
+    env::doc_get_num32("cosigner\0", &mut cosigner);
+    env::doc_get_num64("amount\0", &mut amount);
+    my_account_move(false, &cid, &foreign_key, cosigner, amount, aid);
+}
 
 #[no_mangle]
 #[allow(non_snake_case)]
