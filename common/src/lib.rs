@@ -1,9 +1,6 @@
 #![no_std]
 #![no_main]
 
-include!("bvm_bindings.rs");
-include!("contract_sid.rs");
-
 use core::panic::PanicInfo;
 
 #[panic_handler]
@@ -11,28 +8,37 @@ fn panic_handler(_info: &PanicInfo) -> ! {
     loop {}
 }
 
-#[repr(packed(1))]
-pub struct InitialParams {
-    pub state: u32,
+include!("bvm_bindings.rs");
+include!("contract_sid.rs");
+
+use crate::common::*;
+
+#[repr(C, packed(1))]
+pub struct Key {
+    pub account: PubKey,
+    pub aid: AssetID,
 }
 
-#[repr(packed(1))]
-pub struct DtorParams {}
-
-#[repr(packed(1))]
-pub struct SendMsgParams {
-    pub key: u32,
-    pub secret: u32,
+#[repr(C, packed(1))]
+pub struct Request {
+    pub key: Key,
+    pub amount: Amount,
 }
 
-impl InitialParams {
-    pub const METHOD: u32 = 0;
+#[repr(C, packed(1))]
+pub struct Deposit {
+    pub request: Request,
 }
 
-impl DtorParams {
-    pub const METHOD: u32 = 1;
+#[repr(C, packed(1))]
+pub struct Withdraw {
+    pub request: Request,
 }
 
-impl SendMsgParams {
+impl Deposit {
     pub const METHOD: u32 = 2;
+}
+
+impl Withdraw {
+    pub const METHOD: u32 = 3;
 }
