@@ -5,7 +5,6 @@ use ::common::common::env;
 use ::common::common::*;
 use ::common::*;
 
-use core::mem::size_of;
 use core::mem::size_of_val;
 
 type ActionFunc = fn(cid: ContractID);
@@ -43,7 +42,6 @@ fn my_account_move(
     };
 
     let my_id = MyAccountID { cid: *cid, ctx: 0 };
-
     let kid = KeyID {
         id_ptr: &my_id as *const MyAccountID as *const usize,
         id_size: size_of_val(&my_id) as u32,
@@ -338,7 +336,7 @@ fn on_action_get_proof(cid: ContractID) {
     };
     derive_my_pk(&mut key.key_in_contract.account, &cid);
 
-    let mut amount: *const Amount = 0 as *mut Amount;
+    let mut amount: *const Amount = 0 as *const Amount;
     let mut size_val: u32 = Default::default();
     let mut proof: *const merkle::Node = 0 as *const merkle::Node;
     let proof_size: u32 = env::var_get_proof(
@@ -348,12 +346,12 @@ fn on_action_get_proof(cid: ContractID) {
         &mut size_val,
         &mut proof,
     );
-    if proof_size > 0 && size_of_val(&amount) as u32 == size_val {
+    if proof_size > 0 && size_of_val(&(unsafe { *amount })) as u32 == size_val {
         env::doc_add_num64("Amount\0", unsafe { *amount });
         env::doc_add_blob(
             "proof\0",
             proof,
-            size_of::<merkle::Node> as u32 * proof_size,
+            size_of_val(unsafe { &(*proof) }) as u32 * proof_size,
         );
     }
 }
