@@ -369,51 +369,51 @@ pub mod common {
             proof: *mut *const merkle::Node,
         ) -> u32 {
             unsafe {
-                return _VarGetProof(
+                _VarGetProof(
                     key as *const usize,
                     key_size,
                     val as *mut *const usize,
                     val_size,
                     proof,
-                );
+                )
             }
         }
 
         pub fn derive_pk<T>(pubkey: &mut PubKey, id: *const T, id_size: u32) {
             unsafe {
-                return _DerivePk(pubkey, id as *const usize, id_size);
+                _DerivePk(pubkey, id as *const usize, id_size)
             }
         }
 
         pub fn funds_lock(aid: AssetID, amount: Amount) {
             unsafe {
-                return _FundsLock(aid, amount);
+                _FundsLock(aid, amount)
             }
         }
 
         pub fn funds_unlock(aid: AssetID, amount: Amount) {
             unsafe {
-                return _FundsUnlock(aid, amount);
+                _FundsUnlock(aid, amount)
             }
         }
 
         pub fn add_sig(pubkey: &PubKey) {
             unsafe {
-                return _AddSig(pubkey);
+                _AddSig(pubkey)
             }
         }
 
         pub fn halt_if(condition: bool) {
             unsafe {
                 if condition {
-                    return _Halt();
+                    _Halt()
                 }
             }
         }
 
         pub fn halt() {
             unsafe {
-                return _Halt();
+                _Halt()
             }
         }
 
@@ -425,13 +425,13 @@ pub mod common {
             tag: u8,
         ) -> u32 {
             unsafe {
-                return _EmitLog(
+                _EmitLog(
                     key as *const usize,
                     key_size,
                     value as *const usize,
                     value_size,
                     tag,
-                );
+                )
             }
         }
 
@@ -443,25 +443,25 @@ pub mod common {
             tag: u8,
         ) -> u32 {
             unsafe {
-                return _LoadVar(
+                _LoadVar(
                     key as *const usize,
                     key_size,
                     value as *mut usize,
                     value_size,
                     tag,
-                );
+                )
             }
         }
 
         pub fn del_var<K>(key: *const K, key_size: u32) -> u32 {
             unsafe {
-                return _SaveVar(
+                _SaveVar(
                     key as *const usize,
                     key_size,
                     0 as *const usize,
                     0,
                     KeyTag::INTERNAL,
-                );
+                )
             }
         }
 
@@ -473,133 +473,133 @@ pub mod common {
             tag: u8,
         ) -> u32 {
             unsafe {
-                return _SaveVar(
+                _SaveVar(
                     key as *const usize,
                     key_size,
                     val as *const usize,
                     val_size,
                     tag,
-                );
+                )
             }
         }
 
         pub fn doc_add_text<V>(id: &str, val: *const V) {
             unsafe {
-                return _DocAddText(id.as_ptr() as *const usize, val as *const usize);
+                _DocAddText(id.as_ptr() as *const usize, val as *const usize)
             }
         }
 
         pub fn doc_get_text<V>(id: &str, val: *mut V, val_size: u32) -> u32 {
             unsafe {
-                return _DocGetText(id.as_ptr() as *const usize, val as *mut usize, val_size);
+                _DocGetText(id.as_ptr() as *const usize, val as *mut usize, val_size)
             }
         }
 
         pub fn doc_add_num32(id: &str, val: u32) {
             unsafe {
-                return _DocAddNum32(id.as_ptr() as *const usize, val);
+                _DocAddNum32(id.as_ptr() as *const usize, val)
             }
         }
 
         pub fn doc_get_num64(id: &str, out: *mut u64) -> u8 {
             unsafe {
-                return _DocGetNum64(id.as_ptr() as *const usize, out);
+                _DocGetNum64(id.as_ptr() as *const usize, out)
             }
         }
 
         pub fn doc_get_num32(id: &str, out: *mut u32) -> u8 {
             unsafe {
-                return _DocGetNum32(id.as_ptr() as *const usize, out);
+                _DocGetNum32(id.as_ptr() as *const usize, out)
             }
         }
 
         pub fn doc_add_num64(id: &str, val: u64) {
             unsafe {
-                return _DocAddNum64(id.as_ptr() as *const usize, val);
+                _DocAddNum64(id.as_ptr() as *const usize, val)
             }
         }
 
         pub fn doc_add_blob<V>(id: &str, val: *const V, val_size: u32) {
             unsafe {
-                return _DocAddBlob(id.as_ptr() as *const usize, val as *const usize, val_size);
+                _DocAddBlob(id.as_ptr() as *const usize, val as *const usize, val_size)
             }
         }
 
         pub fn doc_get_blob<V>(id: &str, val: *mut V, val_size: u32) -> u32 {
             unsafe {
-                return _DocGetBlob(id.as_ptr() as *const usize, val as *mut usize, val_size);
+                _DocGetBlob(id.as_ptr() as *const usize, val as *mut usize, val_size)
             }
         }
 
         pub fn doc_add_group(id: &str) {
             unsafe {
-                return _DocAddGroup(id.as_ptr() as *const usize);
+                _DocAddGroup(id.as_ptr() as *const usize)
             }
         }
 
         pub fn doc_close_group() {
             unsafe {
-                return _DocCloseGroup();
+                _DocCloseGroup()
             }
         }
 
         pub fn doc_add_array(id: &str) {
             unsafe {
-                return _DocAddArray(id.as_ptr() as *const usize);
+                _DocAddArray(id.as_ptr() as *const usize)
             }
         }
 
         pub fn doc_close_array() {
             unsafe {
-                return _DocCloseArray();
+                _DocCloseArray()
             }
         }
 
         pub fn mem_is_0<T>(ptr: *const T, size: u32) -> u8 {
             unsafe {
-                return _Memis0(ptr as *const usize, size);
+                _Memis0(ptr as *const usize, size)
             }
         }
 
         pub fn memset<V>(dst: *mut V, val: u8, size: u32) -> *mut usize {
             unsafe {
-                return _Memset(dst as *mut usize, val, size);
+                _Memset(dst as *mut usize, val, size)
             }
         }
 
         pub fn memcpy<S, D>(dst: *mut D, src: *mut S, size: u32) -> *mut usize {
             unsafe {
-                return _Memcpy(dst as *mut usize, src as *mut usize, size);
+                _Memcpy(dst as *mut usize, src as *mut usize, size)
             }
         }
 
         pub fn memcmp<S, D>(p1: *const S, p2: *const D, size: u32) -> i32 {
             unsafe {
-                return _Memcmp(p1 as *const usize, p2 as *const usize, size);
+                _Memcmp(p1 as *const usize, p2 as *const usize, size)
             }
         }
 
         pub fn strlen<V>(p: *const V) -> u32 {
             unsafe {
-                return _Strlen(p as *const usize);
+                _Strlen(p as *const usize)
             }
         }
 
         pub fn heap_alloc(size: u32) -> *mut usize {
             unsafe {
-                return _Heap_Alloc(size);
+                _Heap_Alloc(size)
             }
         }
 
         pub fn heap_free<V>(p: *mut V) {
             unsafe {
-                return _Heap_Free(p as *mut usize);
+                _Heap_Free(p as *mut usize)
             }
         }
 
         pub fn logs_close(slot: u32) {
             unsafe {
-                return _Logs_Close(slot);
+                _Logs_Close(slot)
             }
         }
 
@@ -612,14 +612,14 @@ pub mod common {
             pos_max: *const HeightPos,
         ) -> u32 {
             unsafe {
-                return _Logs_Enum(
+                _Logs_Enum(
                     key0 as *const usize,
                     key0_size,
                     key1 as *const usize,
                     key1_size,
                     pos_min,
                     pos_max,
-                );
+                )
             }
         }
 
@@ -633,7 +633,7 @@ pub mod common {
             repeat: u8,
         ) -> u8 {
             unsafe {
-                return _Logs_MoveNext(
+                _Logs_MoveNext(
                     slot,
                     key as *mut usize,
                     key_size,
@@ -641,13 +641,13 @@ pub mod common {
                     val_size,
                     pos,
                     repeat,
-                );
+                )
             }
         }
 
         pub fn vars_close(slot: u32) {
             unsafe {
-                return _Vars_Close(slot);
+                _Vars_Close(slot)
             }
         }
 
@@ -658,12 +658,12 @@ pub mod common {
             key1_size: u32,
         ) -> u32 {
             unsafe {
-                return _Vars_Enum(
+                _Vars_Enum(
                     key0 as *const usize,
                     key0_size,
                     key1 as *const usize,
                     key1_size,
-                );
+                )
             }
         }
 
@@ -676,14 +676,14 @@ pub mod common {
             repeat: u8,
         ) -> u8 {
             unsafe {
-                return _Vars_MoveNext(
+                _Vars_MoveNext(
                     slot,
                     key as *mut usize,
                     key_size,
                     val as *mut usize,
                     val_size,
                     repeat,
-                );
+                )
             }
         }
 
@@ -700,7 +700,7 @@ pub mod common {
             charge: u32,
         ) {
             unsafe {
-                return _GenerateKernel(
+                _GenerateKernel(
                     cid,
                     method,
                     arg as *const usize,
@@ -711,7 +711,7 @@ pub mod common {
                     sigs_size,
                     comment as *const usize,
                     charge,
-                );
+                )
             }
         }
 
