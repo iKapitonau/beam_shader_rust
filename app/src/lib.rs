@@ -209,14 +209,8 @@ fn on_action_view_logs(cid: ContractID) {
         },
     };
 
-    let mut lr: env::LogReader = env::LogReader::new(
-        &k0 as *const KeyAccount as *const usize,
-        size_of_val(&k0) as u32,
-        &k1 as *const KeyAccount as *const usize,
-        size_of_val(&k1) as u32,
-        0 as *const HeightPos,
-        0 as *const HeightPos,
-    );
+    let mut lr: env::LogReader =
+        env::LogReader::new(&k0, &k1, 0 as *const HeightPos, 0 as *const HeightPos);
     env::doc_add_array("logs\0");
     loop {
         let mut key = KeyAccount {
