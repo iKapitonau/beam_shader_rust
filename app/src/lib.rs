@@ -147,12 +147,7 @@ fn dump_account(pubkey: &PubKey, cid: &ContractID) {
         },
         prefix: env::KeyPrefix { ..k0.prefix },
     };
-    let mut r = env::VarReader::new(
-        &k0 as *const KeyAccount as *const usize,
-        size_of_val(&k0) as u32,
-        &k1 as *const KeyAccount as *const usize,
-        size_of_val(&k1) as u32,
-    );
+    let mut r = env::VarReader::new(&k0, &k1);
     dump_accounts(&mut r);
 }
 
@@ -264,12 +259,7 @@ fn on_action_view_accounts(cid: ContractID) {
         cid,
         tag: KeyTag::INTERNAL + 1,
     };
-    let mut r = env::VarReader::new(
-        &k0 as *const env::KeyPrefix as *const usize,
-        size_of_val(&k0) as u32,
-        &k1 as *const env::KeyPrefix as *const usize,
-        size_of_val(&k1) as u32,
-    );
+    let mut r = env::VarReader::new(&k0, &k1);
     dump_accounts(&mut r);
 }
 

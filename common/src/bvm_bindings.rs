@@ -106,14 +106,14 @@ pub mod root {
         }
 
         impl<const FLEXIBLE: bool> VarReaderEx<FLEXIBLE> {
-            fn enum_internal(
+            fn enum_internal<K1, K2>(
                 &mut self,
-                key1: *const usize,
+                key1: &K1,
                 key1_size: u32,
-                key2: *const usize,
+                key2: &K2,
                 key2_size: u32,
             ) {
-                self.handle = vars_enum(key1, key1_size, key2, key2_size);
+                self.handle = vars_enum(key1 as *const K1, key1_size, key2 as *const K2, key2_size);
             }
 
             fn close_internal(&self) {
@@ -125,24 +125,22 @@ pub mod root {
                 vars_close(self.handle);
             }
 
-            pub fn new(
-                key1: *const usize,
-                key1_size: u32,
-                key2: *const usize,
-                key2_size: u32,
-            ) -> VarReader {
-                let mut r = VarReader {
-                    handle: Default::default(),
-                };
-                r.enum_internal(key1, key1_size, key2, key2_size);
+            pub fn new<K1, K2>(key1: &K1, key2: &K2) -> VarReaderEx<FLEXIBLE> {
+                let mut r: VarReaderEx<FLEXIBLE> = Default::default();
+                r.enum_internal(
+                    key1,
+                    size_of_val(key1) as u32,
+                    key2,
+                    size_of_val(key2) as u32,
+                );
                 r
             }
 
-            pub fn move_next(
+            pub fn move_next<K, V>(
                 &self,
-                key: *mut usize,
+                key: *mut K,
                 key_size: &mut u32,
-                val: *mut usize,
+                val: *mut V,
                 val_size: &mut u32,
                 repeat: u8,
             ) -> bool {
@@ -153,13 +151,7 @@ pub mod root {
                 loop {
                     let mut key_size: u32 = size_of_val(key) as u32;
                     let mut value_size: u32 = size_of_val(value) as u32;
-                    if !self.move_next(
-                        key as *mut K as *mut usize,
-                        &mut key_size,
-                        value as *mut V as *mut usize,
-                        &mut value_size,
-                        0,
-                    ) {
+                    if !self.move_next(key, &mut key_size, value, &mut value_size, 0) {
                         return false;
                     }
                     if size_of_val(key) as u32 == key_size
@@ -172,41 +164,35 @@ pub mod root {
             }
 
             pub fn read<K, V>(key: &K, value: &mut V) -> bool {
-                let mut r = VarReaderEx::<false> {
-                    handle: Default::default(),
-                };
-
+                let mut r: VarReader = Default::default();
                 let mut key_size: u32 = size_of_val(key) as u32;
-                r.enum_internal(
-                    key as *const K as *const usize,
-                    key_size,
-                    key as *const K as *const usize,
-                    key_size,
-                );
+                r.enum_internal(key, key_size, key, key_size);
 
                 let mut val_size: u32 = size_of_val(value) as u32;
                 key_size = 0;
-                let ret = r.move_next(
-                    0 as *mut usize,
-                    &mut key_size,
-                    value as *mut V as *mut usize,
-                    &mut val_size,
-                    0,
-                ) && size_of_val(value) as u32 == val_size;
-                r.close_internal();
-                ret
+                r.move_next(0 as *mut usize, &mut key_size, value, &mut val_size, 0)
+                    && size_of_val(value) as u32 == val_size
             }
 
             pub fn r#enum<K, V>(&mut self, key: &K, value: &V) {
                 self.close_internal();
                 let key_size: u32 = size_of_val(key) as u32;
                 let value_size: u32 = size_of_val(value) as u32;
-                self.enum_internal(
-                    key as *const K as *const usize,
-                    key_size,
-                    value as *const V as *const usize,
-                    value_size,
-                );
+                self.enum_internal(key, key_size, value, value_size);
+            }
+        }
+
+        impl<const FLEXIBLE: bool> Drop for VarReaderEx<FLEXIBLE> {
+            fn drop(&mut self) {
+                self.close_internal()
+            }
+        }
+
+        impl<const FLEXIBLE: bool> Default for VarReaderEx<FLEXIBLE> {
+            fn default() -> Self {
+                VarReaderEx {
+                    handle: Default::default(),
+                }
             }
         }
 
