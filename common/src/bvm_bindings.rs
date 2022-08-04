@@ -16,7 +16,7 @@ pub mod common {
         }
     }
 
-    #[repr(C)]
+    #[repr(C, packed(1))]
     #[derive(Copy, Clone)]
     pub struct SecpPointData {
         pub x: [u8; 32usize],
@@ -34,14 +34,14 @@ pub mod common {
 
     pub type PubKey = SecpPointData;
 
-    #[repr(C)]
+    #[repr(C, packed(1))]
     pub struct FundsChange {
         pub amount: Amount,
         pub aid: AssetID,
         pub consume: u8,
     }
 
-    #[repr(C, packed)]
+    #[repr(C, packed(1))]
     pub struct SigRequest {
         pub id_ptr: *const usize,
         pub id_size: u32,
@@ -100,6 +100,7 @@ pub mod common {
             pub key_in_contract: T,
         }
 
+        #[repr(C)]
         pub struct VarReaderEx<const FLEXIBLE: bool> {
             handle: u32,
         }
@@ -211,6 +212,7 @@ pub mod common {
 
         pub type VarReader = VarReaderEx<false>;
 
+        #[repr(C)]
         pub struct LogReader {
             handle: u32,
             pub pos: HeightPos,
@@ -284,12 +286,13 @@ pub mod common {
 
         #[repr(C, packed(1))]
         struct SidCid {
-            sid: ShaderID,
-            cid: ContractID,
+            pub sid: ShaderID,
+            pub cid: ContractID,
         }
 
         type KeySidCid = Key<SidCid>;
 
+        #[repr(C)]
         struct ContractsWalker {
             pub key: KeySidCid,
             pub height: Height,
