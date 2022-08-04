@@ -33,10 +33,7 @@ fn my_account_move(
     let mut args = Request {
         amount,
         key: Key {
-            account: PubKey {
-                x: Default::default(),
-                y: Default::default(),
-            },
+            account: Default::default(),
             aid,
         },
     };
@@ -48,10 +45,7 @@ fn my_account_move(
     };
 
     /*
-    let my_pk = PubKey {
-        x: Default::default(),
-        y: Default::default(),
-    };
+    let my_pk = Default::default();
     */
 
     let is_multisig: bool = env::mem_is_0(foreign_key, size_of_val(foreign_key) as u32) == 0;
@@ -116,10 +110,7 @@ fn dump_accounts(r: &mut env::VarReader) {
                 tag: KeyTag::INTERNAL,
             },
             key_in_contract: Key {
-                account: SecpPointData {
-                    x: Default::default(),
-                    y: Default::default(),
-                },
+                account: Default::default(),
                 aid: Default::default(),
             },
         };
@@ -210,17 +201,14 @@ fn on_action_view_logs(cid: ContractID) {
             tag: KeyTag::INTERNAL,
         },
         key_in_contract: Key {
-            account: SecpPointData {
-                x: Default::default(),
-                y: Default::default(),
-            },
+            account: Default::default(),
             aid: Default::default(),
         },
     };
     let k1 = KeyAccount {
         prefix: env::KeyPrefix { ..k0.prefix },
         key_in_contract: Key {
-            account: SecpPointData {
+            account: PubKey {
                 x: [0xff; 32],
                 y: 0xff,
             },
@@ -244,10 +232,7 @@ fn on_action_view_logs(cid: ContractID) {
                 tag: KeyTag::INTERNAL,
             },
             key_in_contract: Key {
-                account: SecpPointData {
-                    x: Default::default(),
-                    y: Default::default(),
-                },
+                account: Default::default(),
                 aid: Default::default(),
             },
         };
@@ -291,29 +276,20 @@ fn on_action_view_accounts(cid: ContractID) {
 }
 
 fn on_action_view_account(cid: ContractID) {
-    let mut pubkey = PubKey {
-        x: Default::default(),
-        y: Default::default(),
-    };
+    let mut pubkey: PubKey = Default::default();
     env::doc_get_blob("pubkey\0", &mut pubkey, size_of_val(&pubkey) as u32);
     dump_account(&pubkey, &cid);
 }
 
 // MY_ACCOUNT ACTIONS
 fn on_action_view(cid: ContractID) {
-    let mut pubkey = PubKey {
-        x: Default::default(),
-        y: Default::default(),
-    };
+    let mut pubkey: PubKey = Default::default();
     derive_my_pk(&mut pubkey, &cid);
     dump_account(&pubkey, &cid);
 }
 
 fn on_action_get_key(cid: ContractID) {
-    let mut pubkey = PubKey {
-        x: Default::default(),
-        y: Default::default(),
-    };
+    let mut pubkey: PubKey = Default::default();
     derive_my_pk(&mut pubkey, &cid);
     env::doc_add_blob("key\0", &mut pubkey, size_of_val(&pubkey) as u32);
 }
@@ -327,10 +303,7 @@ fn on_action_get_proof(cid: ContractID) {
             tag: KeyTag::INTERNAL,
         },
         key_in_contract: Key {
-            account: SecpPointData {
-                x: Default::default(),
-                y: Default::default(),
-            },
+            account: Default::default(),
             aid,
         },
     };
@@ -358,10 +331,7 @@ fn on_action_get_proof(cid: ContractID) {
 
 fn on_action_deposit(cid: ContractID) {
     let mut aid: AssetID = Default::default();
-    let mut foreign_key = PubKey {
-        x: Default::default(),
-        y: Default::default(),
-    };
+    let mut foreign_key = Default::default();
     let mut cosigner: u32 = Default::default();
     let mut amount: Amount = Default::default();
     env::doc_get_num32("aid\0", &mut aid);
@@ -377,10 +347,7 @@ fn on_action_deposit(cid: ContractID) {
 
 fn on_action_withdraw(cid: ContractID) {
     let mut aid: AssetID = Default::default();
-    let mut foreign_key = PubKey {
-        x: Default::default(),
-        y: Default::default(),
-    };
+    let mut foreign_key = Default::default();
     let mut cosigner: u32 = Default::default();
     let mut amount: Amount = Default::default();
     env::doc_get_num32("aid\0", &mut aid);

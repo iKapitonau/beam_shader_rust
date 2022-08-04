@@ -23,6 +23,15 @@ pub mod common {
         pub y: u8,
     }
 
+    impl Default for SecpPointData {
+        fn default() -> Self {
+            SecpPointData {
+                x: Default::default(),
+                y: Default::default(),
+            }
+        }
+    }
+
     pub type PubKey = SecpPointData;
 
     #[repr(C)]
