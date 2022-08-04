@@ -303,8 +303,8 @@ pub mod common {
             pub fn r#enum(&mut self, sid: &ShaderID) {
                 let k0 = KeySidCid {
                     prefix: KeyPrefix {
-                        cid: Default::default(),
                         tag: KeyTag::SID_CID,
+                        ..Default::default()
                     },
                     key_in_contract: SidCid {
                         cid: Default::default(),
@@ -335,10 +335,7 @@ pub mod common {
 
             let mut wlk = ContractsWalker {
                 key: KeySidCid {
-                    prefix: KeyPrefix {
-                        cid: [0; 32],
-                        tag: 0,
-                    },
+                    prefix: Default::default(),
                     key_in_contract: SidCid {
                         cid: [0; 32],
                         sid: [1; 32],
