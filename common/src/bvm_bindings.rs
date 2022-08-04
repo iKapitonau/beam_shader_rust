@@ -1,4 +1,4 @@
-pub mod common {
+pub mod root {
     pub type Height = u64;
     pub type Amount = u64;
     pub type AssetID = u32;
@@ -76,7 +76,7 @@ pub mod common {
     }
 
     pub mod env {
-        use crate::common::*;
+        use crate::root::*;
         use core::mem::size_of_val;
 
         #[repr(C, packed(1))]
@@ -377,27 +377,19 @@ pub mod common {
         }
 
         pub fn derive_pk<T>(pubkey: &mut PubKey, id: *const T, id_size: u32) {
-            unsafe {
-                _DerivePk(pubkey, id as *const usize, id_size)
-            }
+            unsafe { _DerivePk(pubkey, id as *const usize, id_size) }
         }
 
         pub fn funds_lock(aid: AssetID, amount: Amount) {
-            unsafe {
-                _FundsLock(aid, amount)
-            }
+            unsafe { _FundsLock(aid, amount) }
         }
 
         pub fn funds_unlock(aid: AssetID, amount: Amount) {
-            unsafe {
-                _FundsUnlock(aid, amount)
-            }
+            unsafe { _FundsUnlock(aid, amount) }
         }
 
         pub fn add_sig(pubkey: &PubKey) {
-            unsafe {
-                _AddSig(pubkey)
-            }
+            unsafe { _AddSig(pubkey) }
         }
 
         pub fn halt_if(condition: bool) {
@@ -409,9 +401,7 @@ pub mod common {
         }
 
         pub fn halt() {
-            unsafe {
-                _Halt()
-            }
+            unsafe { _Halt() }
         }
 
         pub fn emit_log<K, V>(
@@ -481,123 +471,83 @@ pub mod common {
         }
 
         pub fn doc_add_text<V>(id: &str, val: *const V) {
-            unsafe {
-                _DocAddText(id.as_ptr() as *const usize, val as *const usize)
-            }
+            unsafe { _DocAddText(id.as_ptr() as *const usize, val as *const usize) }
         }
 
         pub fn doc_get_text<V>(id: &str, val: *mut V, val_size: u32) -> u32 {
-            unsafe {
-                _DocGetText(id.as_ptr() as *const usize, val as *mut usize, val_size)
-            }
+            unsafe { _DocGetText(id.as_ptr() as *const usize, val as *mut usize, val_size) }
         }
 
         pub fn doc_add_num32(id: &str, val: u32) {
-            unsafe {
-                _DocAddNum32(id.as_ptr() as *const usize, val)
-            }
+            unsafe { _DocAddNum32(id.as_ptr() as *const usize, val) }
         }
 
         pub fn doc_get_num64(id: &str, out: *mut u64) -> u8 {
-            unsafe {
-                _DocGetNum64(id.as_ptr() as *const usize, out)
-            }
+            unsafe { _DocGetNum64(id.as_ptr() as *const usize, out) }
         }
 
         pub fn doc_get_num32(id: &str, out: *mut u32) -> u8 {
-            unsafe {
-                _DocGetNum32(id.as_ptr() as *const usize, out)
-            }
+            unsafe { _DocGetNum32(id.as_ptr() as *const usize, out) }
         }
 
         pub fn doc_add_num64(id: &str, val: u64) {
-            unsafe {
-                _DocAddNum64(id.as_ptr() as *const usize, val)
-            }
+            unsafe { _DocAddNum64(id.as_ptr() as *const usize, val) }
         }
 
         pub fn doc_add_blob<V>(id: &str, val: *const V, val_size: u32) {
-            unsafe {
-                _DocAddBlob(id.as_ptr() as *const usize, val as *const usize, val_size)
-            }
+            unsafe { _DocAddBlob(id.as_ptr() as *const usize, val as *const usize, val_size) }
         }
 
         pub fn doc_get_blob<V>(id: &str, val: *mut V, val_size: u32) -> u32 {
-            unsafe {
-                _DocGetBlob(id.as_ptr() as *const usize, val as *mut usize, val_size)
-            }
+            unsafe { _DocGetBlob(id.as_ptr() as *const usize, val as *mut usize, val_size) }
         }
 
         pub fn doc_add_group(id: &str) {
-            unsafe {
-                _DocAddGroup(id.as_ptr() as *const usize)
-            }
+            unsafe { _DocAddGroup(id.as_ptr() as *const usize) }
         }
 
         pub fn doc_close_group() {
-            unsafe {
-                _DocCloseGroup()
-            }
+            unsafe { _DocCloseGroup() }
         }
 
         pub fn doc_add_array(id: &str) {
-            unsafe {
-                _DocAddArray(id.as_ptr() as *const usize)
-            }
+            unsafe { _DocAddArray(id.as_ptr() as *const usize) }
         }
 
         pub fn doc_close_array() {
-            unsafe {
-                _DocCloseArray()
-            }
+            unsafe { _DocCloseArray() }
         }
 
         pub fn mem_is_0<T>(ptr: *const T, size: u32) -> u8 {
-            unsafe {
-                _Memis0(ptr as *const usize, size)
-            }
+            unsafe { _Memis0(ptr as *const usize, size) }
         }
 
         pub fn memset<V>(dst: *mut V, val: u8, size: u32) -> *mut usize {
-            unsafe {
-                _Memset(dst as *mut usize, val, size)
-            }
+            unsafe { _Memset(dst as *mut usize, val, size) }
         }
 
         pub fn memcpy<S, D>(dst: *mut D, src: *mut S, size: u32) -> *mut usize {
-            unsafe {
-                _Memcpy(dst as *mut usize, src as *mut usize, size)
-            }
+            unsafe { _Memcpy(dst as *mut usize, src as *mut usize, size) }
         }
 
         pub fn memcmp<S, D>(p1: *const S, p2: *const D, size: u32) -> i32 {
-            unsafe {
-                _Memcmp(p1 as *const usize, p2 as *const usize, size)
-            }
+            unsafe { _Memcmp(p1 as *const usize, p2 as *const usize, size) }
         }
 
         pub fn strlen<V>(p: *const V) -> u32 {
-            unsafe {
-                _Strlen(p as *const usize)
-            }
+            unsafe { _Strlen(p as *const usize) }
         }
 
         pub fn heap_alloc(size: u32) -> *mut usize {
-            unsafe {
-                _Heap_Alloc(size)
-            }
+            unsafe { _Heap_Alloc(size) }
         }
 
         pub fn heap_free<V>(p: *mut V) {
-            unsafe {
-                _Heap_Free(p as *mut usize)
-            }
+            unsafe { _Heap_Free(p as *mut usize) }
         }
 
         pub fn logs_close(slot: u32) {
-            unsafe {
-                _Logs_Close(slot)
-            }
+            unsafe { _Logs_Close(slot) }
         }
 
         pub fn logs_enum<U, V>(
@@ -643,9 +593,7 @@ pub mod common {
         }
 
         pub fn vars_close(slot: u32) {
-            unsafe {
-                _Vars_Close(slot)
-            }
+            unsafe { _Vars_Close(slot) }
         }
 
         pub fn vars_enum<U, V>(

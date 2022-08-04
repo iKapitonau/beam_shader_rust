@@ -11,7 +11,7 @@ fn panic_handler(_info: &PanicInfo) -> ! {
 include!("bvm_bindings.rs");
 include!("contract_sid.rs");
 
-use crate::common::*;
+use crate::root::*;
 
 #[repr(C, packed(1))]
 pub struct Key {
