@@ -105,10 +105,7 @@ fn dump_accounts(r: &mut env::VarReader) {
     env::doc_add_array("accounts\0");
     loop {
         let mut key = KeyAccount {
-            prefix: env::KeyPrefix {
-                cid: Default::default(),
-                tag: KeyTag::INTERNAL,
-            },
+            prefix: Default::default(),
             key_in_contract: Key {
                 account: Default::default(),
                 aid: Default::default(),
@@ -136,7 +133,7 @@ fn dump_account(pubkey: &PubKey, cid: &ContractID) {
     let k0 = KeyAccount {
         prefix: env::KeyPrefix {
             cid: *cid,
-            tag: KeyTag::INTERNAL,
+            ..Default::default()
         },
         key_in_contract: Key {
             account: *pubkey,
@@ -158,6 +155,7 @@ fn dump_account(pubkey: &PubKey, cid: &ContractID) {
     );
     dump_accounts(&mut r);
 }
+
 // MANAGER ACTIONS
 
 fn on_action_create_contract(_unused: ContractID) {
@@ -198,7 +196,7 @@ fn on_action_view_logs(cid: ContractID) {
     let k0 = KeyAccount {
         prefix: env::KeyPrefix {
             cid,
-            tag: KeyTag::INTERNAL,
+            ..Default::default()
         },
         key_in_contract: Key {
             account: Default::default(),
@@ -229,7 +227,7 @@ fn on_action_view_logs(cid: ContractID) {
         let mut key = KeyAccount {
             prefix: env::KeyPrefix {
                 cid,
-                tag: KeyTag::INTERNAL,
+                ..Default::default()
             },
             key_in_contract: Key {
                 account: Default::default(),
@@ -260,7 +258,7 @@ fn on_action_view_logs(cid: ContractID) {
 fn on_action_view_accounts(cid: ContractID) {
     let k0 = env::KeyPrefix {
         cid,
-        tag: KeyTag::INTERNAL,
+        ..Default::default()
     };
     let k1 = env::KeyPrefix {
         cid,
@@ -300,7 +298,7 @@ fn on_action_get_proof(cid: ContractID) {
     let mut key = KeyAccount {
         prefix: env::KeyPrefix {
             cid,
-            tag: KeyTag::INTERNAL,
+            ..Default::default()
         },
         key_in_contract: Key {
             account: Default::default(),

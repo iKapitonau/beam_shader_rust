@@ -85,6 +85,15 @@ pub mod common {
             pub tag: u8,
         }
 
+        impl Default for KeyPrefix {
+            fn default() -> Self {
+                KeyPrefix {
+                    cid: Default::default(),
+                    tag: KeyTag::INTERNAL,
+                }
+            }
+        }
+
         #[repr(C, packed(1))]
         pub struct Key<T> {
             pub prefix: KeyPrefix,
