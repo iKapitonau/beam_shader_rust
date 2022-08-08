@@ -8,11 +8,50 @@ pub mod root {
     pub type HashValue = [u8; 32usize];
     pub type SecpScalarData = [u8; 32usize];
 
+    #[repr(C)]
+    pub struct SecpPoint {
+        _unused: [u8; 0],
+    }
+
     pub mod merkle {
         #[repr(C)]
         pub struct Node {
             pub first: bool,
             pub second: [u8; 32],
+        }
+    }
+
+    pub mod secp {
+        use crate::PubKey;
+        use crate::SecpPoint;
+
+        #[repr(C)]
+        pub struct Point {
+            pub ptr: *mut SecpPoint,
+        }
+
+        impl Point {
+            pub fn import(&mut self, pk: &PubKey) -> bool {
+                return crate::env::secp_point_import(self.ptr, pk) != 0;
+            }
+
+            pub fn export(&self, pk: &mut PubKey) {
+                crate::env::secp_point_export(self.ptr, pk);
+            }
+        }
+
+        impl core::ops::AddAssign for Point {
+            fn add_assign(&mut self, other: Point) {
+                crate::env::secp_point_add(self.ptr, self.ptr, other.ptr);
+            }
+        }
+
+        impl Default for Point {
+            fn default() -> Self {
+                Point {
+                    ptr: 0 as *mut SecpPoint,
+                }
+            }
         }
     }
 
@@ -48,9 +87,24 @@ pub mod root {
     }
 
     impl SigRequest {
-        pub fn get_pk(&self, pk: &mut PubKey) {
+        pub fn get_pk<T: core::any::Any>(&self, pk: &mut T) {
+            use core::any::Any;
+            use core::any::TypeId;
             let id_ptr: *const usize = self.id_ptr;
-            env::derive_pk(pk, id_ptr, self.id_size);
+            let pk_any = pk as &mut dyn Any;
+            if TypeId::of::<T>() == TypeId::of::<PubKey>() {
+                env::derive_pk(
+                    pk_any.downcast_mut::<PubKey>().unwrap(),
+                    id_ptr,
+                    self.id_size,
+                );
+            } else {
+                env::get_pk(
+                    pk_any.downcast_mut::<SecpPoint>().unwrap(),
+                    id_ptr,
+                    self.id_size,
+                )
+            }
         }
     }
 
@@ -329,7 +383,7 @@ pub mod root {
                     prefix: Default::default(),
                     key_in_contract: SidCid {
                         cid: [0; 32],
-                        sid: [1; 32],
+                        sid: [1; 32], // to avoid memset lib call
                     },
                 },
                 height: 0,
@@ -651,7 +705,35 @@ pub mod root {
             }
         }
 
+        pub fn secp_point_import(ptr: *mut SecpPoint, pk: *const PubKey) -> u8 {
+            unsafe { _Secp_Point_Import(ptr, pk) }
+        }
+
+        pub fn secp_point_export(ptr: *const SecpPoint, pk: *mut PubKey) {
+            unsafe { _Secp_Point_Export(ptr, pk) }
+        }
+
+        pub fn secp_point_add(dst: *mut SecpPoint, a: *const SecpPoint, b: *const SecpPoint) {
+            unsafe { _Secp_Point_add(dst, a, b) }
+        }
+
+        pub fn get_pk(ptr: *mut SecpPoint, id_ptr: *const usize, id_size: u32) {
+            unsafe { _get_Pk(ptr, id_ptr, id_size) }
+        }
+
         extern "C" {
+            #[link_name = "get_Pk"]
+            fn _get_Pk(ptr: *mut SecpPoint, id_pk: *const usize, id_size: u32);
+
+            #[link_name = "Secp_Point_add"]
+            fn _Secp_Point_add(dst: *mut SecpPoint, a: *const SecpPoint, b: *const SecpPoint);
+
+            #[link_name = "Secp_Point_Export"]
+            fn _Secp_Point_Export(ptr: *const SecpPoint, pk: *mut PubKey);
+
+            #[link_name = "Secp_Point_Import"]
+            fn _Secp_Point_Import(ptr: *mut SecpPoint, pk: *const PubKey) -> u8;
+
             #[link_name = "VarGetProof"]
             fn _VarGetProof(
                 pKey: *const usize,

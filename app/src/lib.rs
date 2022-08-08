@@ -44,15 +44,21 @@ fn my_account_move(
         id_size: size_of_val(&my_id) as u32,
     };
 
-    /*
-    let my_pk = Default::default();
-    */
-
+    let mut my_pk = Default::default();
     let is_multisig: bool = env::mem_is_0(foreign_key, size_of_val(foreign_key) as u32) == 0;
+
     if is_multisig {
-        //let p0 = secp::Point {};
-        //let p1 = secp::Point {};
-        // TODO: after secp impl
+        let mut p0: secp::Point = Default::default();
+        let mut p1: secp::Point = Default::default();
+
+        if !p1.import(foreign_key) {
+            env::doc_add_text("error\0", "bad foreign key\0".as_ptr());
+            return;
+        }
+        kid.get_pk(&mut p0);
+        p0.export(&mut my_pk);
+        p0 += p1;
+        p0.export(&mut args.key.account);
     } else {
         kid.get_pk(&mut args.key.account);
     }
@@ -79,6 +85,9 @@ fn my_account_move(
     } else {
         if is_multisig {
             // TODO
+            if cosigner != 0 {
+            } else {
+            }
         } else {
             env::generate_kernel(
                 cid,
