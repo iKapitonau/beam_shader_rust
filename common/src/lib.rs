@@ -14,31 +14,15 @@ include!("contract_sid.rs");
 use crate::root::*;
 
 #[repr(C, packed(1))]
-pub struct Key {
-    pub account: PubKey,
-    pub aid: AssetID,
-}
+pub struct CtorParams {}
 
 #[repr(C, packed(1))]
-pub struct Request {
-    pub key: Key,
-    pub amount: Amount,
+pub struct DtorParams {}
+
+impl CtorParams {
+    pub const METHOD: u32 = 0;
 }
 
-#[repr(C, packed(1))]
-pub struct Deposit {
-    pub request: Request,
-}
-
-#[repr(C, packed(1))]
-pub struct Withdraw {
-    pub request: Request,
-}
-
-impl Deposit {
-    pub const METHOD: u32 = 2;
-}
-
-impl Withdraw {
-    pub const METHOD: u32 = 3;
+impl DtorParams {
+    pub const METHOD: u32 = 1;
 }
